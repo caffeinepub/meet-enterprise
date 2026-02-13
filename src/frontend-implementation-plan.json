@@ -1,0 +1,23 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Prevent mobile bottom nav from obscuring bottom-of-page content",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Adjust the AppShell <main> spacing on small screens so Outlet content can scroll above the fixed MobileBottomNav without being covered.",
+      "acceptanceCriteria": [
+        "On mobile viewport widths (< md), the bottom-most content inside pages rendered via <Outlet /> is fully visible and can be scrolled above the fixed MobileBottomNav without being covered.",
+        "No layout regression on desktop (>= md): existing spacing and scroll behavior remains normal.",
+        "Change is applied only to the <main> element in AppShell.tsx (do not modify header, footer, or other layout components for this request)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/layout/AppShell.tsx",
+          "operation": "modify",
+          "description": "Update ONLY the existing <main> element (XPath /html/body/div/div/main) to add sufficient mobile-only bottom spacing (including safe-area inset consideration) so content rendered in <Outlet /> is not obscured by the fixed MobileBottomNav; preserve the current md+ spacing behavior."
+        }
+      ]
+    }
+  ]
+}

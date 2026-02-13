@@ -1,0 +1,37 @@
+{
+  "kind": "build_request",
+  "title": "Ensure bottom-of-page text remains visible in main content area",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Update the selected `<main>` element in `frontend/src/components/layout/AppShell.tsx` (XPath `/html/body/div/div/main`) so that content at the bottom of pages rendered inside `<Outlet />` is not obscured by the fixed mobile bottom navigation and remains readable/visible on small screens.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "In this downside my text should be visible"
+        ]
+      },
+      "acceptanceCriteria": [
+        "On mobile viewport widths (< md), the bottom-most content inside pages rendered via `<Outlet />` is fully visible and can be scrolled above the fixed `MobileBottomNav` without being covered.",
+        "No layout regression on desktop (>= md): existing spacing and scroll behavior remains normal.",
+        "Change is applied only to the `<main>` element in `AppShell.tsx` (do not modify header, footer, or other layout components for this request)."
+      ]
+    }
+  ],
+  "constraints": [
+    "Apply changes ONLY to the selected element: `/html/body/div/div/main` (the `<main>` element in `frontend/src/components/layout/AppShell.tsx`).",
+    "Do not edit files under `frontend/src/components/ui` or other immutable paths."
+  ],
+  "nonGoals": [
+    "Changing footer styling/content or the `MobileBottomNav` component behavior.",
+    "Backend changes or data model changes."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

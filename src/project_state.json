@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [
+    "Text should be visible in the downside/bottom area, but currently is not visible."
+  ],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-update-the-selected-main-element-in-frontend-src-components-layout-appshell-tsx-xpath-html-body-div-div-main-so-that-content-at-the-bottom-of-pages-rendered-inside-outlet-is-not-obscured-by-the-fixed-mobile-bottom-navigation-and-remains-readable-visible-on-small-screens",
+      "title": "Update the selected `<main>` element in `frontend/src/components/layout/AppShell.tsx` (XPath `/html/body/div/div/main`) so that content at the bottom of pages rendered inside `<Outlet />` is not obscured by the fixed mobile bottom navigation and remains readable/visible on small screens.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [],
+  "projectName": "Ensure bottom-of-page text remains visible in main content area",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

@@ -1,2 +1,3 @@
-# meet-enterprise
-Exported from Caffeine project: Ensure bottom-of-page text remains visible in main content area
+## 
+
+To run app build and run docker image: `docker build -t app . docker run -it --network host app`
