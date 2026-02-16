@@ -24,6 +24,7 @@ import AdminSupportTicketsPage from './pages/admin/AdminSupportTicketsPage';
 import AdminActivatePage from './pages/admin/AdminActivatePage';
 import AccountPage from './pages/account/AccountPage';
 import AccountLoginPage from './pages/account/AccountLoginPage';
+import AccountSignupPage from './pages/account/AccountSignupPage';
 import { useEffect } from 'react';
 
 const rootRoute = createRootRoute({
@@ -94,6 +95,12 @@ const accountLoginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/account/login',
   component: AccountLoginPage,
+});
+
+const accountSignupRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/account/signup',
+  component: AccountSignupPage,
 });
 
 const notificationsRoute = createRoute({
@@ -174,6 +181,7 @@ const routeTree = rootRoute.addChildren([
   profileRoute,
   accountRoute,
   accountLoginRoute,
+  accountSignupRoute,
   notificationsRoute,
   faqRoute,
   supportTicketsRoute,

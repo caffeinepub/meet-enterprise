@@ -1,30 +1,66 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-13T13:40:47.952Z",
-  "summary": "REQ-1 is implemented by adding responsive bottom padding to the `<main>` element in `AppShell.tsx` (`pb-24 md:pb-6`) to prevent content from being obscured by the fixed `MobileBottomNav` on small screens. However, the diff also modifies files beyond the allowed scope, violating the constraint to apply changes only to the selected `<main>` element.",
+  "generatedAt": "2026-02-16T10:50:44.067Z",
+  "summary": "Core auth changes appear to remove Internet Identity usage from the specified signup/login/auth shell components and update backend `setCredentials` to allow guest-to-user upgrade. However, the diff also introduces several unrelated UI/theme/admin changes and a migration mechanism that were not requested.",
   "missing_requirements": [],
   "hallucinated_features": [
     {
-      "description": "Modified files outside the allowed scope (changes not limited to the selected `<main>` element in `AppShell.tsx`).",
-      "reason": "BuildRequest constraint requires applying changes ONLY to `/html/body/div/div/main` in `frontend/src/components/layout/AppShell.tsx`; the diff shows additional modified files.",
+      "description": "Added backend migration infrastructure (`backend/migration.mo`) and wired it into `backend/main.mo` via `(with migration = Migration.run)` without clear evidence that a state upgrade was required by the BuildRequest.",
+      "reason": "BuildRequest allows creating `backend/migration.mo` only if a state upgrade is required; the diff summary does not show any explicit state schema change requiring migration.",
       "evidence": [
-        "frontend-file-summaries.txt",
-        "project_state.json"
+        "backend/migration.mo",
+        "backend/main.mo"
       ]
     },
     {
-      "description": "Added `safe-area-bottom` class to `<main>` without any request or supporting change shown to define/ensure this class exists.",
-      "reason": "REQ-1 only asks to ensure bottom content is not obscured; the diff introduces an additional class beyond the requested padding adjustment, and no corresponding CSS/util definition is evidenced in the provided diff summary.",
+      "description": "Introduced/modified multiple UI/theme/styling changes (OKLCH gold tokens, Tailwind config updates, banner carousel styling changes) unrelated to removing Internet Identity dependencies or unblocking username/password signup.",
+      "reason": "Not requested by any requirement (REQ-1..REQ-4) and outside the stated scope/non-goals.",
       "evidence": [
-        "frontend/src/components/layout/AppShell.tsx"
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js",
+        "frontend/src/components/home/BannerCarousel.tsx",
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Changed/added admin-area functionality (new analytics dashboard, support tickets placeholder, admin products/orders/customers page changes) unrelated to Internet Identity removal.",
+      "reason": "Not requested by any requirement; BuildRequest focuses on auth/signup flow and backend authorization.",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Modified `frontend/src/components/admin/AdminGuard.tsx` to be a passthrough that allows open access to admin routes.",
+      "reason": "Not requested, and potentially weakens authorization; unrelated to REQ-1..REQ-4.",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Unrelated refactors/changes to shopping/catalog/order pages and product UI (e.g., Tailwind class updates, hook refactors) not tied to II removal.",
+      "reason": "Not requested by BuildRequest requirements.",
+      "evidence": [
+        "frontend-file-summaries.txt",
+        "frontend/src/components/product/ProductCard.tsx"
       ]
     }
   ],
-  "confidence": 0.78,
+  "confidence": 0.72,
   "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
+    "frontend/src/components/auth/LoginButton.tsx",
+    "frontend/src/components/auth/RequireAuth.tsx",
     "frontend/src/components/layout/AppShell.tsx",
+    "frontend/src/components/layout/BrandHeader.tsx",
+    "frontend/src/components/product/ProductCard.tsx",
+    "frontend/src/hooks/useAuthSession.ts",
+    "frontend/src/hooks/useCallerUserProfileSafe.ts",
+    "frontend/src/pages/account/AccountLoginPage.tsx",
+    "frontend/src/pages/account/AccountPage.tsx",
+    "frontend/src/pages/account/AccountSignupPage.tsx",
     "project_state.json"
   ]
 }

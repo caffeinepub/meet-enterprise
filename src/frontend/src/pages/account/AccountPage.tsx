@@ -1,26 +1,32 @@
-import { useInternetIdentity } from '../../hooks/useInternetIdentity';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
-import { User, LogIn, UserCircle, Info } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { UserCircle } from 'lucide-react';
+import { guestSession } from '../../utils/guestSession';
+import { useAuthSession } from '../../hooks/useAuthSession';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function AccountPage() {
-  const { identity, login, clear, loginStatus } = useInternetIdentity();
   const navigate = useNavigate();
-  const isAuthenticated = !!identity;
-  const isLoggingIn = loginStatus === 'logging-in';
+  const queryClient = useQueryClient();
+  const { isSignedIn } = useAuthSession();
 
-  const handleAuth = async () => {
-    if (isAuthenticated) {
-      await clear();
-    } else {
-      try {
-        await login();
-      } catch (error: any) {
-        console.error('Login error:', error);
-      }
-    }
+  const handleSignOut = async () => {
+    // Clear all cached data
+    queryClient.clear();
+    // Clear guest session
+    guestSession.clear();
+    // Navigate to home
+    navigate({ to: '/' });
+  };
+
+  const handleSignIn = () => {
+    navigate({ to: '/account/signup' });
+  };
+
+  const handleContinueAsGuest = () => {
+    guestSession.enable();
+    navigate({ to: '/catalog' });
   };
 
   return (
@@ -31,57 +37,46 @@ export default function AccountPage() {
           <p className="text-muted-foreground">Manage your Meet Enterprise account</p>
         </div>
 
-        {!isAuthenticated && (
-          <Alert className="border-gold/20 bg-gold/5">
-            <Info className="h-4 w-4 text-gold" />
-            <AlertDescription className="text-sm space-y-2">
-              <p className="font-medium text-foreground">How to sign in:</p>
-              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                <li>Internet Identity does NOT use email or password</li>
-                <li>Click "Sign In" below to authenticate securely</li>
-                <li>You'll be redirected to Internet Identity's secure login</li>
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-
         <Card>
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center">
-              {isAuthenticated ? (
-                <UserCircle className="h-8 w-8 text-gold" />
-              ) : (
-                <User className="h-8 w-8 text-gold" />
-              )}
+              <UserCircle className="h-8 w-8 text-gold" />
             </div>
-            <CardTitle>{isAuthenticated ? 'Signed In' : 'Sign In Required'}</CardTitle>
+            <CardTitle>{isSignedIn ? 'Signed In' : 'Sign In'}</CardTitle>
             <CardDescription>
-              {isAuthenticated
-                ? 'You are currently signed in with Internet Identity'
+              {isSignedIn
+                ? 'You are currently signed in'
                 : 'Sign in to access your profile, orders, and wishlist'}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {isAuthenticated ? (
+          <CardContent className="space-y-3">
+            {isSignedIn ? (
               <>
                 <Button onClick={() => navigate({ to: '/profile' })} className="w-full" size="lg">
                   <UserCircle className="mr-2 h-5 w-5" />
                   View Profile
                 </Button>
-                <Button onClick={handleAuth} variant="outline" className="w-full" size="lg">
+                <Button onClick={handleSignOut} variant="outline" className="w-full" size="lg">
                   Sign Out
                 </Button>
               </>
             ) : (
-              <Button onClick={handleAuth} disabled={isLoggingIn} className="w-full" size="lg">
-                <LogIn className="mr-2 h-5 w-5" />
-                {isLoggingIn ? 'Signing In...' : 'Sign In with Internet Identity'}
-              </Button>
+              <>
+                <Button onClick={handleSignIn} className="w-full" size="lg">
+                  Sign In
+                </Button>
+                <Button onClick={handleContinueAsGuest} variant="outline" className="w-full" size="lg">
+                  Continue as Guest
+                </Button>
+                <p className="text-xs text-center text-muted-foreground pt-2">
+                  Guest mode allows browsing without an account
+                </p>
+              </>
             )}
           </CardContent>
         </Card>
 
-        {isAuthenticated && (
+        {isSignedIn && (
           <div className="grid gap-4 sm:grid-cols-2">
             <Card className="cursor-pointer hover:border-gold/50 transition-colors" onClick={() => navigate({ to: '/orders' })}>
               <CardHeader>

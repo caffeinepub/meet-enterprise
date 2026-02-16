@@ -13,6 +13,7 @@ import type { Principal } from '@icp-sdk/core/principal';
 export interface CartItem { 'productId' : ProductId, 'quantity' : bigint }
 export interface Category { 'id' : CategoryId, 'name' : string }
 export type CategoryId = string;
+export interface Credentials { 'salt' : string, 'hashedPassword' : string }
 export type ExternalBlob = Uint8Array;
 export interface Order {
   'id' : OrderId,
@@ -26,8 +27,8 @@ export type OrderId = string;
 export interface Product {
   'id' : ProductId,
   'title' : string,
+  'size' : string,
   'description' : string,
-  'stock' : bigint,
   'category' : CategoryId,
   'image' : ProductPic,
   'price' : bigint,
@@ -75,7 +76,7 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addCategory' : ActorMethod<[string], undefined>,
   'addProduct' : ActorMethod<
-    [string, string, bigint, CategoryId, bigint, ProductPic],
+    [string, string, bigint, CategoryId, string, ProductPic],
     ProductId
   >,
   'addRating' : ActorMethod<[ProductId, bigint], undefined>,
@@ -84,20 +85,15 @@ export interface _SERVICE {
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'bootstrapAdmin' : ActorMethod<[bigint], undefined>,
   'checkout' : ActorMethod<[], undefined>,
-  /**
-   * / New function to completely clear the admin activation and force a new activation flow!
-   */
   'clearAdminActivation' : ActorMethod<[], undefined>,
   'clearCart' : ActorMethod<[], undefined>,
   'getBestSellingProduct' : ActorMethod<[], [] | [Product]>,
-  /**
-   * / Utility - helpful for debugging, support tickets, and troubleshooting permission lags after upgrades.
-   */
   'getCallerPrincipal' : ActorMethod<[], Principal>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCart' : ActorMethod<[], Array<CartItem>>,
   'getCategories' : ActorMethod<[], Array<Category>>,
+  'getCredentials' : ActorMethod<[], [] | [Credentials]>,
   'getOrder' : ActorMethod<[OrderId], [] | [Order]>,
   'getOrders' : ActorMethod<[], Array<Order>>,
   'getProduct' : ActorMethod<[ProductId], Product>,
@@ -109,14 +105,13 @@ export interface _SERVICE {
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getWishlist' : ActorMethod<[], Array<ProductId>>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isUsernamePasswordSet' : ActorMethod<[], boolean>,
   'removeFromCart' : ActorMethod<[ProductId], undefined>,
-  /**
-   * / Allows admin to reset activation code for future processing, but keeps it 1-time only.
-   */
   'resetAdminActivationCode' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'searchProducts' : ActorMethod<[string], Array<Product>>,
   'seedStore' : ActorMethod<[], undefined>,
+  'setCredentials' : ActorMethod<[string, string], undefined>,
   'updateOrderStatus' : ActorMethod<[OrderId, string], undefined>,
   'uploadProductImage' : ActorMethod<[ExternalBlob], ProductPic>,
 }

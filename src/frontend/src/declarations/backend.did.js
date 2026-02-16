@@ -30,8 +30,8 @@ export const UserRole = IDL.Variant({
 export const Product = IDL.Record({
   'id' : ProductId,
   'title' : IDL.Text,
+  'size' : IDL.Text,
   'description' : IDL.Text,
-  'stock' : IDL.Nat,
   'category' : CategoryId,
   'image' : ProductPic,
   'price' : IDL.Nat,
@@ -47,6 +47,10 @@ export const CartItem = IDL.Record({
   'quantity' : IDL.Nat,
 });
 export const Category = IDL.Record({ 'id' : CategoryId, 'name' : IDL.Text });
+export const Credentials = IDL.Record({
+  'salt' : IDL.Text,
+  'hashedPassword' : IDL.Text,
+});
 export const OrderId = IDL.Text;
 export const UserId = IDL.Principal;
 export const Time = IDL.Int;
@@ -90,7 +94,7 @@ export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addCategory' : IDL.Func([IDL.Text], [], []),
   'addProduct' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Nat, CategoryId, IDL.Nat, ProductPic],
+      [IDL.Text, IDL.Text, IDL.Nat, CategoryId, IDL.Text, ProductPic],
       [ProductId],
       [],
     ),
@@ -108,6 +112,7 @@ export const idlService = IDL.Service({
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCart' : IDL.Func([], [IDL.Vec(CartItem)], ['query']),
   'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+  'getCredentials' : IDL.Func([], [IDL.Opt(Credentials)], ['query']),
   'getOrder' : IDL.Func([OrderId], [IDL.Opt(Order)], ['query']),
   'getOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
   'getProduct' : IDL.Func([ProductId], [Product], ['query']),
@@ -131,11 +136,13 @@ export const idlService = IDL.Service({
     ),
   'getWishlist' : IDL.Func([], [IDL.Vec(ProductId)], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isUsernamePasswordSet' : IDL.Func([], [IDL.Bool], ['query']),
   'removeFromCart' : IDL.Func([ProductId], [], []),
   'resetAdminActivationCode' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'searchProducts' : IDL.Func([IDL.Text], [IDL.Vec(Product)], ['query']),
   'seedStore' : IDL.Func([], [], []),
+  'setCredentials' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'updateOrderStatus' : IDL.Func([OrderId, IDL.Text], [], []),
   'uploadProductImage' : IDL.Func([ExternalBlob], [ProductPic], []),
 });
@@ -165,8 +172,8 @@ export const idlFactory = ({ IDL }) => {
   const Product = IDL.Record({
     'id' : ProductId,
     'title' : IDL.Text,
+    'size' : IDL.Text,
     'description' : IDL.Text,
-    'stock' : IDL.Nat,
     'category' : CategoryId,
     'image' : ProductPic,
     'price' : IDL.Nat,
@@ -182,6 +189,10 @@ export const idlFactory = ({ IDL }) => {
     'quantity' : IDL.Nat,
   });
   const Category = IDL.Record({ 'id' : CategoryId, 'name' : IDL.Text });
+  const Credentials = IDL.Record({
+    'salt' : IDL.Text,
+    'hashedPassword' : IDL.Text,
+  });
   const OrderId = IDL.Text;
   const UserId = IDL.Principal;
   const Time = IDL.Int;
@@ -225,7 +236,7 @@ export const idlFactory = ({ IDL }) => {
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addCategory' : IDL.Func([IDL.Text], [], []),
     'addProduct' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Nat, CategoryId, IDL.Nat, ProductPic],
+        [IDL.Text, IDL.Text, IDL.Nat, CategoryId, IDL.Text, ProductPic],
         [ProductId],
         [],
       ),
@@ -243,6 +254,7 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCart' : IDL.Func([], [IDL.Vec(CartItem)], ['query']),
     'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+    'getCredentials' : IDL.Func([], [IDL.Opt(Credentials)], ['query']),
     'getOrder' : IDL.Func([OrderId], [IDL.Opt(Order)], ['query']),
     'getOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
     'getProduct' : IDL.Func([ProductId], [Product], ['query']),
@@ -266,11 +278,13 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getWishlist' : IDL.Func([], [IDL.Vec(ProductId)], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isUsernamePasswordSet' : IDL.Func([], [IDL.Bool], ['query']),
     'removeFromCart' : IDL.Func([ProductId], [], []),
     'resetAdminActivationCode' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'searchProducts' : IDL.Func([IDL.Text], [IDL.Vec(Product)], ['query']),
     'seedStore' : IDL.Func([], [], []),
+    'setCredentials' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'updateOrderStatus' : IDL.Func([OrderId, IDL.Text], [], []),
     'uploadProductImage' : IDL.Func([ExternalBlob], [ProductPic], []),
   });

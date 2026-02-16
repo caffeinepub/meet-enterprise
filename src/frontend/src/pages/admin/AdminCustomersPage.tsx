@@ -12,9 +12,9 @@ export default function AdminCustomersPage() {
           <Users className="h-4 w-4" />
           <AlertTitle>Customer Management</AlertTitle>
           <AlertDescription>
-            Customer profiles are managed through Internet Identity. Each user's identity is secured by the
-            Internet Computer's authentication system. User profile information (name, email, phone, address)
-            is stored securely on-chain.
+            Customer profiles are stored securely on-chain. Each user's identity is managed through
+            blockchain-based authentication. User profile information (name, email, phone, address)
+            is encrypted and stored on the Internet Computer.
           </AlertDescription>
         </Alert>
       </div>

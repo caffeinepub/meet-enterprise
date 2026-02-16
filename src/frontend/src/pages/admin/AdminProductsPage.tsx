@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Plus, Loader2 } from 'lucide-react';
 import { useGetProducts, useGetCategories, useAddProduct, useAddCategory } from '../../hooks/useQueries';
+import { ExternalBlob } from '../../backend';
 import { toast } from 'sonner';
 import AdminGuard from '../../components/admin/AdminGuard';
 
@@ -45,7 +46,7 @@ export default function AdminProductsPage() {
     description: '',
     price: '',
     category: '',
-    stock: '',
+    size: '',
     imageFile: null as File | null,
   });
 
@@ -61,14 +62,15 @@ export default function AdminProductsPage() {
 
     try {
       const imageBytes = new Uint8Array(await newProduct.imageFile.arrayBuffer());
+      const imageBlob = ExternalBlob.fromBytes(imageBytes);
 
       await addProductMutation.mutateAsync({
         title: newProduct.title,
         description: newProduct.description,
         price: Number(newProduct.price),
         category: newProduct.category,
-        stock: Number(newProduct.stock),
-        image: imageBytes,
+        size: newProduct.size,
+        image: imageBlob,
       });
 
       toast.success('Product added successfully');
@@ -78,7 +80,7 @@ export default function AdminProductsPage() {
         description: '',
         price: '',
         category: '',
-        stock: '',
+        size: '',
         imageFile: null,
       });
     } catch (error: any) {
@@ -178,12 +180,12 @@ export default function AdminProductsPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="stock">Stock</Label>
+                      <Label htmlFor="size">Size</Label>
                       <Input
-                        id="stock"
-                        type="number"
-                        value={newProduct.stock}
-                        onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+                        id="size"
+                        type="text"
+                        value={newProduct.size}
+                        onChange={(e) => setNewProduct({ ...newProduct, size: e.target.value })}
                         required
                       />
                     </div>
@@ -241,7 +243,7 @@ export default function AdminProductsPage() {
                   <TableHead>Title</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Price</TableHead>
-                  <TableHead>Stock</TableHead>
+                  <TableHead>Size</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -257,7 +259,7 @@ export default function AdminProductsPage() {
                       <TableCell className="font-medium">{product.title}</TableCell>
                       <TableCell>{product.category}</TableCell>
                       <TableCell>${Number(product.price).toFixed(2)}</TableCell>
-                      <TableCell>{Number(product.stock)}</TableCell>
+                      <TableCell>{product.size}</TableCell>
                     </TableRow>
                   );
                 })}

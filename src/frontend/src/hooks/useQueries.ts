@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { Product, Category, Order, CartItem, UserProfile, ProductId, OrderId, CategoryId, UserRole } from '../backend';
+import type { Product, Category, Order, CartItem, UserProfile, ProductId, OrderId, CategoryId, UserRole, Credentials } from '../backend';
 import { ExternalBlob } from '../backend';
 
 export function useGetCategories() {
@@ -338,18 +338,19 @@ export function useAddProduct() {
       description,
       price,
       category,
-      stock,
+      size,
       image,
     }: {
       title: string;
       description: string;
       price: number;
       category: CategoryId;
-      stock: number;
-      image: Uint8Array;
+      size: string;
+      image: ExternalBlob;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.addProduct(title, description, BigInt(price), category, BigInt(stock), image);
+      const uploadedImage = await actor.uploadProductImage(image);
+      return actor.addProduct(title, description, BigInt(price), category, size, uploadedImage);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
@@ -357,29 +358,14 @@ export function useAddProduct() {
   });
 }
 
-export function useUploadProductImage() {
-  const { actor } = useActor();
-
-  return useMutation({
-    mutationFn: async (image: ExternalBlob) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.uploadProductImage(image);
-    },
-  });
-}
-
-export function useGetCurrentUserRole() {
+export function useGetCallerUserRole() {
   const { actor, isFetching } = useActor();
 
   return useQuery<UserRole>({
-    queryKey: ['currentUserRole'],
+    queryKey: ['callerUserRole'],
     queryFn: async () => {
-      if (!actor) return 'guest' as UserRole;
-      try {
-        return await actor.getCallerUserRole();
-      } catch {
-        return 'guest' as UserRole;
-      }
+      if (!actor) throw new Error('Actor not available');
+      return actor.getCallerUserRole();
     },
     enabled: !!actor && !isFetching,
   });
@@ -394,6 +380,58 @@ export function useIsCallerAdmin() {
       if (!actor) return false;
       try {
         return await actor.isCallerAdmin();
+      } catch {
+        return false;
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// Credentials Management Hooks
+
+export function useSaveCredentials() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ password, salt }: { password: string; salt: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.setCredentials(password, salt);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credentials'] });
+      queryClient.invalidateQueries({ queryKey: ['isUsernamePasswordSet'] });
+    },
+  });
+}
+
+export function useGetCredentials() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Credentials | null>({
+    queryKey: ['credentials'],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        return await actor.getCredentials();
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useIsUsernamePasswordSet() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<boolean>({
+    queryKey: ['isUsernamePasswordSet'],
+    queryFn: async () => {
+      if (!actor) return false;
+      try {
+        return await actor.isUsernamePasswordSet();
       } catch {
         return false;
       }

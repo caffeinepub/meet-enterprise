@@ -1,34 +1,90 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-13T13:40:47.955Z",
+  "generatedAt": "2026-02-16T10:50:44.069Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 4,
+    "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Update the selected `<main>` element in `frontend/src/components/layout/AppShell.tsx` (XPath `/html/body/div/div/main`) so that content at the bottom of pages rendered inside `<Outlet />` is not obscured by the fixed mobile bottom navigation and remains readable/visible on small screens.",
+        "summary": "Remove Internet Identity usage from the username/password sign-up flow so users can create an account without requiring `useInternetIdentity()` and without showing the error message “Please enable guest mode or sign in to continue”.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/layout/AppShell.tsx"
+          "frontend/src/pages/account/AccountSignupPage.tsx",
+          "frontend/src/hooks/useAuthSession.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/layout/AppShell.tsx"
+          "frontend/src/pages/account/AccountSignupPage.tsx",
+          "frontend/src/hooks/useAuthSession.ts"
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Replace Internet Identity-based “authenticated” checks in account/auth UI with backend-derived role/session state so the app never depends on `useInternetIdentity()` for gating pages or rendering “Sign In/Logout” states.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/account/AccountLoginPage.tsx",
+          "frontend/src/pages/account/AccountPage.tsx",
+          "frontend/src/components/auth/RequireAuth.tsx",
+          "frontend/src/components/auth/LoginButton.tsx",
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/hooks/useCallerUserProfileSafe.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/account/AccountLoginPage.tsx",
+          "frontend/src/pages/account/AccountPage.tsx",
+          "frontend/src/components/auth/RequireAuth.tsx",
+          "frontend/src/components/auth/LoginButton.tsx",
+          "frontend/src/components/layout/AppShell.tsx",
+          "frontend/src/hooks/useCallerUserProfileSafe.ts"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Update backend authorization so username/password sign-up can succeed without Internet Identity by allowing a guest caller to set credentials and be upgraded to a user role during sign-up.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Ensure routing/navigation related to authentication uses only in-app pages (e.g., `/account/signup`, guest mode) and never links to or redirects to Internet Identity (id.ai).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/layout/BrandHeader.tsx",
+          "frontend/src/components/product/ProductCard.tsx",
+          "frontend/src/pages/account/AccountSignupPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/layout/BrandHeader.tsx",
+          "frontend/src/components/product/ProductCard.tsx",
+          "frontend/src/pages/account/AccountSignupPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/components/auth/LoginButton.tsx",
+    "frontend/src/components/auth/RequireAuth.tsx",
     "frontend/src/components/layout/AppShell.tsx",
+    "frontend/src/components/layout/BrandHeader.tsx",
+    "frontend/src/components/product/ProductCard.tsx",
+    "frontend/src/hooks/useAuthSession.ts",
+    "frontend/src/hooks/useCallerUserProfileSafe.ts",
+    "frontend/src/pages/account/AccountLoginPage.tsx",
+    "frontend/src/pages/account/AccountPage.tsx",
+    "frontend/src/pages/account/AccountSignupPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

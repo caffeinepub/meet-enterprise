@@ -101,8 +101,6 @@ export default function ProductDetailPage() {
     }
   };
 
-  const inStock = Number(product.stock) > 0;
-
   return (
     <div className="container mx-auto px-4 py-6">
       <Button variant="ghost" onClick={() => navigate({ to: '/catalog' })} className="mb-4 gap-2">
@@ -133,10 +131,12 @@ export default function ProductDetailPage() {
                 <Star className="h-5 w-5 fill-gold text-gold" />
                 <span className="font-medium">{rating > 0 ? rating.toFixed(1) : 'New'}</span>
               </div>
-              <span className="text-muted-foreground">|</span>
-              <span className={inStock ? 'text-green-600' : 'text-destructive'}>
-                {inStock ? `${Number(product.stock)} in stock` : 'Out of Stock'}
-              </span>
+              {product.size && (
+                <>
+                  <span className="text-muted-foreground">|</span>
+                  <span className="text-muted-foreground">Size: {product.size}</span>
+                </>
+              )}
             </div>
           </div>
 
@@ -164,8 +164,7 @@ export default function ProductDetailPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setQuantity(Math.min(Number(product.stock), quantity + 1))}
-                disabled={!inStock}
+                onClick={() => setQuantity(quantity + 1)}
               >
                 +
               </Button>
@@ -177,7 +176,7 @@ export default function ProductDetailPage() {
               className="flex-1 gap-2"
               size="lg"
               onClick={handleAddToCart}
-              disabled={!inStock || addToCart.isPending}
+              disabled={addToCart.isPending}
             >
               <ShoppingCart className="h-5 w-5" />
               Add to Cart
@@ -197,7 +196,6 @@ export default function ProductDetailPage() {
             size="lg"
             className="w-full"
             onClick={handleBuyNow}
-            disabled={!inStock}
           >
             Buy Now
           </Button>

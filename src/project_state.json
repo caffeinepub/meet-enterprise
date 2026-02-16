@@ -1,24 +1,57 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
-  "architectural_notes": [],
+  "summary": "App authentication should be converted to pure username/password by fully removing all Internet Identity usage; current build attempts are failing and the app still behaves as if II is active.",
+  "architectural_notes": [
+    "Authentication: fully remove Internet Identity (II) flow and dependencies; use only username/password login/signup across the app."
+  ],
   "known_issues": [
-    "Text should be visible in the downside/bottom area, but currently is not visible."
+    "Build/deploy attempt failed with 'AI was unable to implement your request' and user still sees the same message (II likely still active in background)."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-update-the-selected-main-element-in-frontend-src-components-layout-appshell-tsx-xpath-html-body-div-div-main-so-that-content-at-the-bottom-of-pages-rendered-inside-outlet-is-not-obscured-by-the-fixed-mobile-bottom-navigation-and-remains-readable-visible-on-small-screens",
-      "title": "Update the selected `<main>` element in `frontend/src/components/layout/AppShell.tsx` (XPath `/html/body/div/div/main`) so that content at the bottom of pages rendered inside `<Outlet />` is not obscured by the fixed mobile bottom navigation and remains readable/visible on small screens.",
+      "id": "feature-remove-internet-identity-usage-from-the-username-password-sign-up-flow-so-users-can-create-an-account-without-requiring-useinternetidentity-and-without-showing-the-error-message-please-enable-guest-mode-or-sign-in-to-continue",
+      "title": "Remove Internet Identity usage from the username/password sign-up flow so users can create an account without requiring `useInternetIdentity()` and without showing the error message “Please enable guest mode or sign in to continue”.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-replace-internet-identity-based-authenticated-checks-in-account-auth-ui-with-backend-derived-role-session-state-so-the-app-never-depends-on-useinternetidentity-for-gating-pages-or-rendering-sign-in-logout-states",
+      "title": "Replace Internet Identity-based “authenticated” checks in account/auth UI with backend-derived role/session state so the app never depends on `useInternetIdentity()` for gating pages or rendering “Sign In/Logout” states.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-routing-navigation-related-to-authentication-uses-only-in-app-pages-e-g-account-signup-guest-mode-and-never-links-to-or-redirects-to-internet-identity-id-ai",
+      "title": "Ensure routing/navigation related to authentication uses only in-app pages (e.g., `/account/signup`, guest mode) and never links to or redirects to Internet Identity (id.ai).",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
     }
   ],
-  "new_feature_requests": [],
-  "projectName": "Ensure bottom-of-page text remains visible in main content area",
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Remove all Internet Identity integration and make auth purely username/password (no useInternetIdentity dependency).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Update backend authorization so username/password sign-up can succeed without Internet Identity by allowing a guest caller to set credentials and be upgraded to a user role during sign-up.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    }
+  ],
+  "projectName": "Remove remaining Internet Identity dependencies and unblock username/password signup",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

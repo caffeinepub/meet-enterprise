@@ -8,14 +8,15 @@ import Array "mo:core/Array";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
+import Migration "migration"; // Add migration import
 
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-// Use migration
-
+// Use migration via 'with' for state changes
+(with migration = Migration.run)
 actor {
   // Access control & authorization
   let accessControlState = AccessControl.initState();
@@ -33,13 +34,25 @@ actor {
   };
   type ProductPic = Storage.ExternalBlob;
 
+  type Credentials = {
+    hashedPassword : Text;
+    salt : Text;
+  };
+
+  public type UserProfile = {
+    name : Text;
+    email : Text;
+    phone : Text;
+    address : Text;
+  };
+
   type Product = {
     id : ProductId;
     title : Text;
     description : Text;
     price : Nat;
     category : CategoryId;
-    stock : Nat;
+    size : Text;
     image : ProductPic;
   };
 
@@ -57,28 +70,10 @@ actor {
     createdAt : Time.Time;
   };
 
-  public type UserProfile = {
-    name : Text;
-    email : Text;
-    phone : Text;
-    address : Text;
-  };
-
-  type AdminMode = {
-    #admin_required;
-    #no_permission_required;
-  };
-
-  // Helper for Product comparison (by price)
-  module Product {
-    public func compareByPrice(p1 : Product, p2 : Product) : Order.Order {
-      Nat.compare(p1.price, p2.price);
-    };
-  };
-
-  // State persistent data
+  // Persistent state
   var nextProductId = 1;
   var nextOrderId = 1;
+
   let cartState = Map.empty<UserId, List.List<CartItem>>();
   let ratingState = Map.empty<ProductId, List.List<Nat>>();
   let productState = Map.empty<ProductId, Product>();
@@ -86,29 +81,64 @@ actor {
   let wishlistState = Map.empty<UserId, List.List<ProductId>>();
   var adminActivationUsed = false;
   var adminActivationCode = 2537;
+
   let orders = List.empty<Order>();
   let categories = List.empty<Category>();
+  let credentialsMap = Map.empty<UserId, Credentials>();
 
-  var adminMode : AdminMode = #no_permission_required;
+  var adminMode = false; // Default to strict mode (false)
 
-  // Secure one-time backend-admin creation - bootstrap for first deploy.
-  // Uses secure 4-digit activation code instead of principal.
+  module Product {
+    public func compareByPrice(p1 : Product, p2 : Product) : Order.Order {
+      Nat.compare(p1.price, p2.price);
+    };
+  };
+
+  // Auth Management
+
+  public shared ({ caller }) func setCredentials(password : Text, salt : Text) : async () {
+    switch (AccessControl.getUserRole(accessControlState, caller)) {
+      case (#admin or #user) {
+        if (password.size() < 10) {
+          Runtime.trap("Password too short");
+        };
+        credentialsMap.add(caller, { hashedPassword = password; salt });
+      };
+      case (#guest) {
+        if (password.size() < 10) {
+          Runtime.trap("Password too short");
+        };
+        credentialsMap.add(caller, { hashedPassword = password; salt });
+        AccessControl.assignRole(accessControlState, caller, caller, #user);
+      };
+    };
+  };
+
+  public query ({ caller }) func getCredentials() : async ?Credentials {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can get credentials");
+    };
+    credentialsMap.get(caller);
+  };
+
+  public query ({ caller }) func isUsernamePasswordSet() : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can check credentials status");
+    };
+    credentialsMap.containsKey(caller);
+  };
+
+  // Secure one-time backend-admin creation.
   public shared ({ caller }) func bootstrapAdmin(activationCode : Nat) : async () {
-    // CRITICAL: Strict one-time check - always first
     if (adminActivationUsed) {
       Runtime.trap("Forbidden: Admin role has already been claimed");
     };
 
-    // Validate activation code. No principal check needed. Anyone could
-    // claim admin, but only with the correct code (=default=2537)
     if (activationCode != adminActivationCode) {
       Runtime.trap("Forbidden: Invalid admin activation code");
     };
 
-    // Atomic state update: Mark activation as used
     adminActivationUsed := true;
-
-    // Assign admin role
     switch (AccessControl.getUserRole(accessControlState, caller)) {
       case (#admin) {
         Runtime.trap("Bootstrap failed: Caller is already an admin");
@@ -120,26 +150,22 @@ actor {
     };
   };
 
-  /// Allows admin to reset activation code for future processing, but keeps it 1-time only.
   public shared ({ caller }) func resetAdminActivationCode(newActivationCode : Nat) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Forbidden: Only admins can reset activation code");
+      Runtime.trap("Unauthorized: Only admins can reset activation code");
     };
 
     adminActivationCode := newActivationCode;
   };
 
-  /// New function to completely clear the admin activation and force a new activation flow!
   public shared ({ caller }) func clearAdminActivation() : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Forbidden: Only admins can clear admin activation state :)");
+      Runtime.trap("Unauthorized: Only admins can clear admin activation state");
     };
 
     adminActivationUsed := false;
-    Runtime.trap("Bootstrap state has been fully cleared. Please proceed with new admin setup :).");
   };
 
-  /// Utility - helpful for debugging, support tickets, and troubleshooting permission lags after upgrades.
   public query ({ caller }) func getCallerPrincipal() : async Principal {
     caller;
   };
@@ -168,6 +194,10 @@ actor {
 
   // Category Management
   public shared ({ caller }) func addCategory(name : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add categories");
+    };
+
     let id = name;
 
     let category : Category = {
@@ -184,20 +214,15 @@ actor {
 
   // Product Management
   public shared ({ caller }) func uploadProductImage(image : Storage.ExternalBlob) : async ProductPic {
-    // No admin restriction anymore
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can upload product images");
+    };
     image;
   };
 
-  public shared ({ caller }) func addProduct(title : Text, description : Text, price : Nat, category : CategoryId, stock : Nat, image : ProductPic) : async ProductId {
-    // Allow unauthenticated admin panel operation (deprecated).
-    // TODO: Remove fallback once non-dev onboarding is complete.
-    switch (adminMode) {
-      case (#no_permission_required) {};
-      case (#admin_required) {
-        if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-          Runtime.trap("Unauthorized: Only admins can add products");
-        };
-      };
+  public shared ({ caller }) func addProduct(title : Text, description : Text, price : Nat, category : CategoryId, size : Text, image : ProductPic) : async ProductId {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add products");
     };
 
     let productId = "prod" # nextProductId.toText();
@@ -209,7 +234,7 @@ actor {
       description;
       price;
       category;
-      stock;
+      size;
       image;
     };
 
@@ -408,14 +433,8 @@ actor {
   };
 
   public shared ({ caller }) func updateOrderStatus(orderId : OrderId, status : Text) : async () {
-    // Allow unauthenticated admin panel operation (migration/fallback mode).
-    switch (adminMode) {
-      case (#no_permission_required) {};
-      case (#admin_required) {
-        if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-          Runtime.trap("Unauthorized: Only admins can update order status");
-        };
-      };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update order status");
     };
 
     let ordersArray = orders.toArray();
@@ -517,18 +536,9 @@ actor {
     };
   };
 
-  // Store Initialization and Demo Data
   public shared ({ caller }) func seedStore() : async () {
-    // Allow unauthenticated admin panel operation (migration/fallback mode).
-    switch (adminMode) {
-      case (#no_permission_required) {};
-      case (#admin_required) {
-        if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-          Runtime.trap("Unauthorized: Only admins can seed store");
-        };
-      };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can seed store");
     };
-    // Add demo categories and products as needed
   };
 };
-

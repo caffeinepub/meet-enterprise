@@ -25,6 +25,10 @@ export interface Category {
     name: string;
 }
 export type Time = bigint;
+export interface Credentials {
+    salt: string;
+    hashedPassword: string;
+}
 export interface Order {
     id: OrderId;
     status: string;
@@ -44,8 +48,8 @@ export interface CartItem {
 export interface Product {
     id: ProductId;
     title: string;
+    size: string;
     description: string;
-    stock: bigint;
     category: CategoryId;
     image: ProductPic;
     price: bigint;
@@ -58,27 +62,22 @@ export enum UserRole {
 }
 export interface backendInterface {
     addCategory(name: string): Promise<void>;
-    addProduct(title: string, description: string, price: bigint, category: CategoryId, stock: bigint, image: ProductPic): Promise<ProductId>;
+    addProduct(title: string, description: string, price: bigint, category: CategoryId, size: string, image: ProductPic): Promise<ProductId>;
     addRating(productId: ProductId, rating: bigint): Promise<void>;
     addToCart(productId: ProductId, quantity: bigint): Promise<void>;
     addToWishlist(productId: ProductId): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bootstrapAdmin(activationCode: bigint): Promise<void>;
     checkout(): Promise<void>;
-    /**
-     * / New function to completely clear the admin activation and force a new activation flow!
-     */
     clearAdminActivation(): Promise<void>;
     clearCart(): Promise<void>;
     getBestSellingProduct(): Promise<Product | null>;
-    /**
-     * / Utility - helpful for debugging, support tickets, and troubleshooting permission lags after upgrades.
-     */
     getCallerPrincipal(): Promise<Principal>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCart(): Promise<Array<CartItem>>;
     getCategories(): Promise<Array<Category>>;
+    getCredentials(): Promise<Credentials | null>;
     getOrder(orderId: OrderId): Promise<Order | null>;
     getOrders(): Promise<Array<Order>>;
     getProduct(productId: ProductId): Promise<Product>;
@@ -90,14 +89,13 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWishlist(): Promise<Array<ProductId>>;
     isCallerAdmin(): Promise<boolean>;
+    isUsernamePasswordSet(): Promise<boolean>;
     removeFromCart(productId: ProductId): Promise<void>;
-    /**
-     * / Allows admin to reset activation code for future processing, but keeps it 1-time only.
-     */
     resetAdminActivationCode(newActivationCode: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchProducts(searchText: string): Promise<Array<Product>>;
     seedStore(): Promise<void>;
+    setCredentials(password: string, salt: string): Promise<void>;
     updateOrderStatus(orderId: OrderId, status: string): Promise<void>;
     uploadProductImage(image: ExternalBlob): Promise<ProductPic>;
 }

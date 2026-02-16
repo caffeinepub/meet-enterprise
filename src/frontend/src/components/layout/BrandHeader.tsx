@@ -3,20 +3,20 @@ import { Search, ShoppingCart, User, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import LoginButton from '../auth/LoginButton';
-import { useInternetIdentity } from '../../hooks/useInternetIdentity';
-import { useGetCallerUserProfile, useGetCart } from '../../hooks/useQueries';
+import { useCallerUserProfileSafe } from '../../hooks/useCallerUserProfileSafe';
+import { useAuthSession } from '../../hooks/useAuthSession';
+import { useGetCart } from '../../hooks/useQueries';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 export default function BrandHeader() {
   const navigate = useNavigate();
-  const { identity } = useInternetIdentity();
-  const { data: profile } = useGetCallerUserProfile();
+  const { isSignedIn } = useAuthSession();
+  const { data: profile } = useCallerUserProfileSafe();
   const { data: cart } = useGetCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isAuthenticated = !!identity;
   const cartCount = cart?.length || 0;
 
   const handleSearch = (e: React.FormEvent) => {
@@ -69,11 +69,9 @@ export default function BrandHeader() {
                 </span>
               )}
             </Button>
-            {identity && (
-              <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/profile' })}>
-                <User className="h-5 w-5" />
-              </Button>
-            )}
+            <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/account' })}>
+              <User className="h-5 w-5" />
+            </Button>
             <LoginButton />
           </div>
 
@@ -99,7 +97,7 @@ export default function BrandHeader() {
                     className="pl-10"
                   />
                 </form>
-                {identity && profile && (
+                {isSignedIn && profile && (
                   <div className="text-sm">
                     <p className="font-medium">Welcome, {profile.name}</p>
                   </div>

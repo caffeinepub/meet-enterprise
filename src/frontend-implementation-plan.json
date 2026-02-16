@@ -1,21 +1,93 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Prevent mobile bottom nav from obscuring bottom-of-page content",
+  "title": "Remove Internet Identity dependencies from auth UI and enable guest-based username/password signup",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Adjust the AppShell <main> spacing on small screens so Outlet content can scroll above the fixed MobileBottomNav without being covered.",
+      "summary": "Remove Internet Identity dependency from username/password sign-up so signup works without identity and without the guest/II error toast.",
       "acceptanceCriteria": [
-        "On mobile viewport widths (< md), the bottom-most content inside pages rendered via <Outlet /> is fully visible and can be scrolled above the fixed MobileBottomNav without being covered.",
-        "No layout regression on desktop (>= md): existing spacing and scroll behavior remains normal.",
-        "Change is applied only to the <main> element in AppShell.tsx (do not modify header, footer, or other layout components for this request)."
+        "`frontend/src/pages/account/AccountSignupPage.tsx` no longer imports or calls `useInternetIdentity()`.",
+        "Submitting the sign-up form does not block on `identity` being present.",
+        "The toast/error “Please enable guest mode or sign in to continue” is no longer shown during normal sign-up.",
+        "A user can complete sign-up and be redirected to `/profile` (or an equivalent logged-in destination) without any navigation/redirect to Internet Identity (id.ai)."
       ],
       "file_operations": [
         {
+          "path": "frontend/src/pages/account/AccountSignupPage.tsx",
+          "operation": "modify",
+          "description": "Remove `useInternetIdentity()` import/usage and eliminate the identity presence check/toast that blocks submit; allow `setCredentials` mutation to run for guest/anonymous callers and on success clear any guest-mode flag and navigate to `/profile`."
+        },
+        {
+          "path": "frontend/src/hooks/useAuthSession.ts",
+          "operation": "create",
+          "description": "Add a small session helper hook that derives an in-app \"signed-in\" state from backend role via `useCurrentUserRole()` plus the existing `guestSession` override (guest mode forces signed-out behavior), to be reused by signup/login/account UI. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Replace Internet Identity-based authenticated checks in auth/account UI with backend role + guest session state for gating and login/logout rendering.",
+      "acceptanceCriteria": [
+        "`frontend/src/pages/account/AccountLoginPage.tsx`, `frontend/src/pages/account/AccountPage.tsx`, `frontend/src/components/auth/RequireAuth.tsx`, `frontend/src/components/auth/LoginButton.tsx`, and `frontend/src/components/layout/AppShell.tsx` no longer import or call `useInternetIdentity()`.",
+        "Auth gating and logged-in UI state is determined without `identity` (e.g., using existing backend role queries and/or a local guest flag).",
+        "No buttons or auth gates trigger any Internet Identity login/redirect flows."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/account/AccountLoginPage.tsx",
+          "operation": "modify",
+          "description": "Replace identity-based redirect logic with backend-derived session/role state from the new `useAuthSession` hook; keep navigation strictly to in-app routes (`/profile`, `/account/signup`, `/account`)."
+        },
+        {
+          "path": "frontend/src/pages/account/AccountPage.tsx",
+          "operation": "modify",
+          "description": "Remove `useInternetIdentity()` usage and implement sign-in/sign-out UI states using backend-derived role/session state; implement \"Sign Out\" as an in-app session reset (clear guest flag override as appropriate, clear cached queries) without any Internet Identity calls."
+        },
+        {
+          "path": "frontend/src/components/auth/RequireAuth.tsx",
+          "operation": "modify",
+          "description": "Remove `useInternetIdentity()` usage and gate content using backend-derived role state + guestSession; support showing the existing in-app “Sign In or Continue as Guest” card when access is not allowed (no external redirects)."
+        },
+        {
+          "path": "frontend/src/components/auth/LoginButton.tsx",
+          "operation": "modify",
+          "description": "Remove `useInternetIdentity()` usage; render \"Sign In\" vs \"Logout\" based on backend-derived session state; update handlers so unauthenticated routes to `/account/signup` and logout performs only in-app session cleanup (e.g., clear react-query cache, clear/enable guest session as designed) with no Internet Identity actions."
+        },
+        {
           "path": "frontend/src/components/layout/AppShell.tsx",
           "operation": "modify",
-          "description": "Update ONLY the existing <main> element (XPath /html/body/div/div/main) to add sufficient mobile-only bottom spacing (including safe-area inset consideration) so content rendered in <Outlet /> is not obscured by the fixed MobileBottomNav; preserve the current md+ spacing behavior."
+          "description": "Remove `useInternetIdentity()` usage; compute authenticated state from backend-derived role/session; ensure guest notice and profile-setup modal are shown/hidden based on this state (no dependency on `identity`)."
+        },
+        {
+          "path": "frontend/src/hooks/useCallerUserProfileSafe.ts",
+          "operation": "create",
+          "description": "Create a safe profile query hook that only attempts `getCallerUserProfile()` when backend-derived session indicates a user/admin (and not guest override), preventing unauthorized profile queries from running. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Ensure auth-related routing/navigation stays in-app and never redirects/links to Internet Identity (id.ai).",
+      "acceptanceCriteria": [
+        "Navigating through Account, Sign Up, and protected pages does not open external identity provider pages.",
+        "Protected pages either render content for users/guests (as intended) or show the in-app “Sign In or Continue as Guest” card without any Internet Identity references or redirects."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/layout/BrandHeader.tsx",
+          "operation": "modify",
+          "description": "Remove `useInternetIdentity()` usage and any identity-dependent UI; use backend-derived session/role state (via `useAuthSession` and/or existing profile queries when allowed) to render welcome text and user actions; keep all navigation internal."
+        },
+        {
+          "path": "frontend/src/components/product/ProductCard.tsx",
+          "operation": "modify",
+          "description": "Replace identity presence checks with backend-derived session/role state for gating add-to-cart/wishlist actions; on insufficient access, show an in-app message/toast and navigate to `/account/signup` (or `/account/login`) without any external identity provider flow."
+        },
+        {
+          "path": "frontend/src/pages/account/AccountSignupPage.tsx",
+          "operation": "modify",
+          "description": "Double-check all sign-up navigation remains internal and that no error messaging references Internet Identity or triggers guest-mode as a workaround for missing identity."
         }
       ]
     }

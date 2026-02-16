@@ -4,7 +4,7 @@ import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import type { Product } from '../../backend';
 import { useAddToCart, useAddToWishlist, useGetProductRating } from '../../hooks/useQueries';
-import { useInternetIdentity } from '../../hooks/useInternetIdentity';
+import { useAuthSession } from '../../hooks/useAuthSession';
 import { toast } from 'sonner';
 import { useState } from 'react';
 
@@ -14,7 +14,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const navigate = useNavigate();
-  const { identity } = useInternetIdentity();
+  const { isSignedIn } = useAuthSession();
   const addToCart = useAddToCart();
   const addToWishlist = useAddToWishlist();
   const { data: rating = 0 } = useGetProductRating(product.id);
@@ -31,8 +31,9 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!identity) {
+    if (!isSignedIn) {
       toast.error('Please sign in to add items to cart');
+      navigate({ to: '/account/signup' });
       return;
     }
     try {
@@ -45,8 +46,9 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToWishlist = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!identity) {
+    if (!isSignedIn) {
       toast.error('Please sign in to add items to wishlist');
+      navigate({ to: '/account/signup' });
       return;
     }
     try {
@@ -84,18 +86,18 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className="text-sm font-medium">{rating > 0 ? rating.toFixed(1) : 'New'}</span>
         </div>
         <p className="text-2xl font-bold text-gold">₹{Number(product.price).toLocaleString()}</p>
-        {Number(product.stock) === 0 && (
-          <p className="text-sm text-destructive mt-1">Out of Stock</p>
+        {product.size && (
+          <p className="text-sm text-muted-foreground mt-1">Size: {product.size}</p>
         )}
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button
           className="w-full gap-2"
           onClick={handleAddToCart}
-          disabled={Number(product.stock) === 0 || addToCart.isPending}
+          disabled={addToCart.isPending}
         >
           <ShoppingCart className="h-4 w-4" />
-          {Number(product.stock) === 0 ? 'Out of Stock' : 'Add to Cart'}
+          Add to Cart
         </Button>
       </CardFooter>
     </Card>

@@ -23,7 +23,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto text-center space-y-6">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Welcome to <span className="text-gold">Meet Enterprise</span>
+              Welcome to <span className="text-gold drop-shadow-[0_0_12px_oklch(var(--gold)/0.5)]">Meet Enterprise</span>
             </h1>
             <p className="text-lg text-muted-foreground">
               Premium shopping experience with luxury products
@@ -49,7 +49,7 @@ export default function HomePage() {
               <Button
                 key={category.id}
                 variant="outline"
-                className="h-auto py-6 flex flex-col gap-2"
+                className="h-auto py-6 flex flex-col gap-2 hover:border-gold hover:text-gold transition-all"
                 onClick={() => navigate({ to: '/catalog', search: { category: category.id } })}
               >
                 <span className="font-semibold">{category.name}</span>
@@ -76,12 +76,12 @@ export default function HomePage() {
 
       {/* CTA Section */}
       <section className="container mx-auto px-4">
-        <div className="bg-gradient-to-r from-gold/10 to-gold/5 rounded-lg p-8 md:p-12 text-center">
+        <div className="bg-gradient-to-r from-gold/20 via-gold/15 to-gold/10 rounded-lg p-8 md:p-12 text-center shadow-lg border border-gold/20">
           <h2 className="text-3xl font-bold mb-4">Discover Premium Quality</h2>
           <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
             Explore our curated collection of premium products with unbeatable prices and fast delivery
           </p>
-          <Button size="lg" onClick={() => navigate({ to: '/catalog' })} className="gap-2">
+          <Button size="lg" onClick={() => navigate({ to: '/catalog' })} className="gap-2 bg-gold hover:bg-gold/90 text-background font-bold shadow-lg hover:shadow-xl transition-all">
             Browse All Products
             <ArrowRight className="h-4 w-4" />
           </Button>

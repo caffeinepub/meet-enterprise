@@ -23,7 +23,7 @@ export default function BannerCarousel() {
       <CarouselContent>
         {[1, 2, 3].map((index) => (
           <CarouselItem key={index}>
-            <div className="relative aspect-[16/6] md:aspect-[16/5] rounded-lg overflow-hidden bg-gradient-to-r from-gold/10 to-gold/5" />
+            <div className="relative aspect-[16/6] md:aspect-[16/5] rounded-lg overflow-hidden bg-gradient-to-r from-gold/20 via-gold/15 to-gold/10 shadow-lg" />
           </CarouselItem>
         ))}
       </CarouselContent>

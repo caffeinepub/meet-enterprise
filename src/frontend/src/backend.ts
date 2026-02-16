@@ -107,6 +107,10 @@ export type Time = bigint;
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
 }
+export interface Credentials {
+    salt: string;
+    hashedPassword: string;
+}
 export interface _CaffeineStorageCreateCertificateResult {
     method: string;
     blob_hash: string;
@@ -130,8 +134,8 @@ export interface CartItem {
 export interface Product {
     id: ProductId;
     title: string;
+    size: string;
     description: string;
-    stock: bigint;
     category: CategoryId;
     image: ProductPic;
     price: bigint;
@@ -151,27 +155,22 @@ export interface backendInterface {
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     addCategory(name: string): Promise<void>;
-    addProduct(title: string, description: string, price: bigint, category: CategoryId, stock: bigint, image: ProductPic): Promise<ProductId>;
+    addProduct(title: string, description: string, price: bigint, category: CategoryId, size: string, image: ProductPic): Promise<ProductId>;
     addRating(productId: ProductId, rating: bigint): Promise<void>;
     addToCart(productId: ProductId, quantity: bigint): Promise<void>;
     addToWishlist(productId: ProductId): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bootstrapAdmin(activationCode: bigint): Promise<void>;
     checkout(): Promise<void>;
-    /**
-     * / New function to completely clear the admin activation and force a new activation flow!
-     */
     clearAdminActivation(): Promise<void>;
     clearCart(): Promise<void>;
     getBestSellingProduct(): Promise<Product | null>;
-    /**
-     * / Utility - helpful for debugging, support tickets, and troubleshooting permission lags after upgrades.
-     */
     getCallerPrincipal(): Promise<Principal>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getCart(): Promise<Array<CartItem>>;
     getCategories(): Promise<Array<Category>>;
+    getCredentials(): Promise<Credentials | null>;
     getOrder(orderId: OrderId): Promise<Order | null>;
     getOrders(): Promise<Array<Order>>;
     getProduct(productId: ProductId): Promise<Product>;
@@ -183,18 +182,17 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     getWishlist(): Promise<Array<ProductId>>;
     isCallerAdmin(): Promise<boolean>;
+    isUsernamePasswordSet(): Promise<boolean>;
     removeFromCart(productId: ProductId): Promise<void>;
-    /**
-     * / Allows admin to reset activation code for future processing, but keeps it 1-time only.
-     */
     resetAdminActivationCode(newActivationCode: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchProducts(searchText: string): Promise<Array<Product>>;
     seedStore(): Promise<void>;
+    setCredentials(password: string, salt: string): Promise<void>;
     updateOrderStatus(orderId: OrderId, status: string): Promise<void>;
     uploadProductImage(image: ExternalBlob): Promise<ProductPic>;
 }
-import type { ExternalBlob as _ExternalBlob, Order as _Order, Product as _Product, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
+import type { Credentials as _Credentials, ExternalBlob as _ExternalBlob, Order as _Order, Product as _Product, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _caffeineStorageBlobIsLive(arg0: Uint8Array): Promise<boolean> {
@@ -309,7 +307,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async addProduct(arg0: string, arg1: string, arg2: bigint, arg3: CategoryId, arg4: bigint, arg5: ProductPic): Promise<ProductId> {
+    async addProduct(arg0: string, arg1: string, arg2: bigint, arg3: CategoryId, arg4: string, arg5: ProductPic): Promise<ProductId> {
         if (this.processError) {
             try {
                 const result = await this.actor.addProduct(arg0, arg1, arg2, arg3, arg4, arg5);
@@ -519,18 +517,32 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async getOrder(arg0: OrderId): Promise<Order | null> {
+    async getCredentials(): Promise<Credentials | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.getOrder(arg0);
+                const result = await this.actor.getCredentials();
                 return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getOrder(arg0);
+            const result = await this.actor.getCredentials();
             return from_candid_opt_n14(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getOrder(arg0: OrderId): Promise<Order | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getOrder(arg0);
+                return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getOrder(arg0);
+            return from_candid_opt_n15(this._uploadFile, this._downloadFile, result);
         }
     }
     async getOrders(): Promise<Array<Order>> {
@@ -673,6 +685,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async isUsernamePasswordSet(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isUsernamePasswordSet();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isUsernamePasswordSet();
+            return result;
+        }
+    }
     async removeFromCart(arg0: ProductId): Promise<void> {
         if (this.processError) {
             try {
@@ -743,6 +769,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async setCredentials(arg0: string, arg1: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setCredentials(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setCredentials(arg0, arg1);
+            return result;
+        }
+    }
     async updateOrderStatus(arg0: OrderId, arg1: string): Promise<void> {
         if (this.processError) {
             try {
@@ -760,14 +800,14 @@ export class Backend implements backendInterface {
     async uploadProductImage(arg0: ExternalBlob): Promise<ProductPic> {
         if (this.processError) {
             try {
-                const result = await this.actor.uploadProductImage(await to_candid_ExternalBlob_n15(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.uploadProductImage(await to_candid_ExternalBlob_n16(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.uploadProductImage(await to_candid_ExternalBlob_n15(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.uploadProductImage(await to_candid_ExternalBlob_n16(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
@@ -784,7 +824,10 @@ function from_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
 function from_candid_opt_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Order]): Order | null {
+function from_candid_opt_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Credentials]): Credentials | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Order]): Order | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
@@ -814,7 +857,7 @@ function from_candid_variant_n13(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-async function to_candid_ExternalBlob_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ExternalBlob): Promise<_ExternalBlob> {
+async function to_candid_ExternalBlob_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ExternalBlob): Promise<_ExternalBlob> {
     return await _uploadFile(value);
 }
 function to_candid_UserRole_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {

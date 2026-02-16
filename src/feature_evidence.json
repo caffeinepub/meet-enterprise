@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-selected-main-element-in-frontend-src-components-layout-appshell-tsx-xpath-html-body-div-div-main-so-that-content-at-the-bottom-of-pages-rendered-inside-outlet-is-not-obscured-by-the-fixed-mobile-bottom-navigation-and-remains-readable-visible-on-small-screens",
-      "featureTitle": "Update the selected `<main>` element in `frontend/src/components/layout/AppShell.tsx` (XPath `/html/body/div/div/main`) so that content at the bottom of pages rendered inside `<Outlet />` is not obscured by the fixed mobile bottom navigation and remains readable/visible on small screens.",
+      "featureId": "feature-remove-internet-identity-usage-from-the-username-password-sign-up-flow-so-users-can-create-an-account-without-requiring-useinternetidentity-and-without-showing-the-error-message-please-enable-guest-mode-or-sign-in-to-continue",
+      "featureTitle": "Remove Internet Identity usage from the username/password sign-up flow so users can create an account without requiring `useInternetIdentity()` and without showing the error message “Please enable guest mode or sign in to continue”.",
       "files": [
-        "frontend/src/components/layout/AppShell.tsx"
+        "frontend/src/hooks/useAuthSession.ts",
+        "frontend/src/pages/account/AccountSignupPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,6 +19,53 @@
       ],
       "testIds": [
         "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-replace-internet-identity-based-authenticated-checks-in-account-auth-ui-with-backend-derived-role-session-state-so-the-app-never-depends-on-useinternetidentity-for-gating-pages-or-rendering-sign-in-logout-states",
+      "featureTitle": "Replace Internet Identity-based “authenticated” checks in account/auth UI with backend-derived role/session state so the app never depends on `useInternetIdentity()` for gating pages or rendering “Sign In/Logout” states.",
+      "files": [
+        "frontend/src/components/auth/LoginButton.tsx",
+        "frontend/src/components/auth/RequireAuth.tsx",
+        "frontend/src/components/layout/AppShell.tsx",
+        "frontend/src/hooks/useCallerUserProfileSafe.ts",
+        "frontend/src/pages/account/AccountLoginPage.tsx",
+        "frontend/src/pages/account/AccountPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-routing-navigation-related-to-authentication-uses-only-in-app-pages-e-g-account-signup-guest-mode-and-never-links-to-or-redirects-to-internet-identity-id-ai",
+      "featureTitle": "Ensure routing/navigation related to authentication uses only in-app pages (e.g., `/account/signup`, guest mode) and never links to or redirects to Internet Identity (id.ai).",
+      "files": [
+        "frontend/src/components/layout/BrandHeader.tsx",
+        "frontend/src/components/product/ProductCard.tsx",
+        "frontend/src/pages/account/AccountSignupPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
       ],
       "confidence": "high"
     }
