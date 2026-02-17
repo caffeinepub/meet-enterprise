@@ -14,7 +14,7 @@ interface RequireAuthProps {
 
 export default function RequireAuth({ children, message }: RequireAuthProps) {
   const navigate = useNavigate();
-  const { isSignedIn } = useAuthSession();
+  const { isSignedIn, isLoading } = useAuthSession();
   const [isGuestMode, setIsGuestMode] = useState(guestSession.isActive());
 
   useEffect(() => {
@@ -27,10 +27,10 @@ export default function RequireAuth({ children, message }: RequireAuthProps) {
   };
 
   const handleSignIn = () => {
-    navigate({ to: '/account/signup' });
+    navigate({ to: '/account/login' });
   };
 
-  // Allow access if signed in or in guest mode
+  // Allow access if authenticated or in guest mode
   if (isSignedIn || isGuestMode) {
     return (
       <>
@@ -47,6 +47,19 @@ export default function RequireAuth({ children, message }: RequireAuthProps) {
     );
   }
 
+  // Show loading state while initializing
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign-in prompt only for truly unauthenticated users
   return (
     <div className="flex items-center justify-center min-h-[60vh] p-4">
       <Card className="max-w-md w-full">
@@ -56,7 +69,7 @@ export default function RequireAuth({ children, message }: RequireAuthProps) {
           </div>
           <CardTitle>Sign In or Continue as Guest</CardTitle>
           <CardDescription>
-            {message || 'Choose how you want to proceed'}
+            {message || 'Sign in with Google or phone to access all features'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

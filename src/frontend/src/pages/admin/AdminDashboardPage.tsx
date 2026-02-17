@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from '@tanstack/react-router';
-import { Package, ShoppingCart, Users, BarChart3, MessageCircle } from 'lucide-react';
+import { Package, ShoppingCart, Users, BarChart3, MessageCircle, CreditCard } from 'lucide-react';
 import AdminGuard from '../../components/admin/AdminGuard';
 
 export default function AdminDashboardPage() {
@@ -12,6 +12,7 @@ export default function AdminDashboardPage() {
     { icon: Users, title: 'Customers', description: 'View customer information', path: '/admin/customers' },
     { icon: BarChart3, title: 'Analytics', description: 'Sales reports and insights', path: '/admin/analytics' },
     { icon: MessageCircle, title: 'Support', description: 'Manage support tickets', path: '/admin/support' },
+    { icon: CreditCard, title: 'UPI Configuration', description: 'Configure UPI payment settings', path: '/admin/upi' },
   ];
 
   return (

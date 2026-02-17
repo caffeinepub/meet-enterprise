@@ -1,93 +1,80 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Remove Internet Identity dependencies from auth UI and enable guest-based username/password signup",
+  "title": "Meet Enterprise — Replace Internet Identity login with simple Google + phone session sign-in (frontend-only)",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Remove Internet Identity dependency from username/password sign-up so signup works without identity and without the guest/II error toast.",
+      "summary": "Replace /account/login Internet Identity UI with Google button + phone sign-in form while keeping guest access.",
       "acceptanceCriteria": [
-        "`frontend/src/pages/account/AccountSignupPage.tsx` no longer imports or calls `useInternetIdentity()`.",
-        "Submitting the sign-up form does not block on `identity` being present.",
-        "The toast/error “Please enable guest mode or sign in to continue” is no longer shown during normal sign-up.",
-        "A user can complete sign-up and be redirected to `/profile` (or an equivalent logged-in destination) without any navigation/redirect to Internet Identity (id.ai)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/account/AccountSignupPage.tsx",
-          "operation": "modify",
-          "description": "Remove `useInternetIdentity()` import/usage and eliminate the identity presence check/toast that blocks submit; allow `setCredentials` mutation to run for guest/anonymous callers and on success clear any guest-mode flag and navigate to `/profile`."
-        },
-        {
-          "path": "frontend/src/hooks/useAuthSession.ts",
-          "operation": "create",
-          "description": "Add a small session helper hook that derives an in-app \"signed-in\" state from backend role via `useCurrentUserRole()` plus the existing `guestSession` override (guest mode forces signed-out behavior), to be reused by signup/login/account UI. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Replace Internet Identity-based authenticated checks in auth/account UI with backend role + guest session state for gating and login/logout rendering.",
-      "acceptanceCriteria": [
-        "`frontend/src/pages/account/AccountLoginPage.tsx`, `frontend/src/pages/account/AccountPage.tsx`, `frontend/src/components/auth/RequireAuth.tsx`, `frontend/src/components/auth/LoginButton.tsx`, and `frontend/src/components/layout/AppShell.tsx` no longer import or call `useInternetIdentity()`.",
-        "Auth gating and logged-in UI state is determined without `identity` (e.g., using existing backend role queries and/or a local guest flag).",
-        "No buttons or auth gates trigger any Internet Identity login/redirect flows."
+        "Visiting /account/login does not display any mention of “Internet Identity” or “blockchain-based authentication”.",
+        "AccountLoginPage.tsx no longer imports or calls useInternetIdentity().",
+        "The page renders two primary options: a “Continue with Google” button and a phone number input with a clear primary action button (e.g., “Continue” / “Send code”).",
+        "The existing “Continue as Guest” option remains available (or is replaced by equivalent functionality) so users can proceed without authenticating."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/account/AccountLoginPage.tsx",
           "operation": "modify",
-          "description": "Replace identity-based redirect logic with backend-derived session/role state from the new `useAuthSession` hook; keep navigation strictly to in-app routes (`/profile`, `/account/signup`, `/account`)."
-        },
-        {
-          "path": "frontend/src/pages/account/AccountPage.tsx",
-          "operation": "modify",
-          "description": "Remove `useInternetIdentity()` usage and implement sign-in/sign-out UI states using backend-derived role/session state; implement \"Sign Out\" as an in-app session reset (clear guest flag override as appropriate, clear cached queries) without any Internet Identity calls."
-        },
-        {
-          "path": "frontend/src/components/auth/RequireAuth.tsx",
-          "operation": "modify",
-          "description": "Remove `useInternetIdentity()` usage and gate content using backend-derived role state + guestSession; support showing the existing in-app “Sign In or Continue as Guest” card when access is not allowed (no external redirects)."
-        },
-        {
-          "path": "frontend/src/components/auth/LoginButton.tsx",
-          "operation": "modify",
-          "description": "Remove `useInternetIdentity()` usage; render \"Sign In\" vs \"Logout\" based on backend-derived session state; update handlers so unauthenticated routes to `/account/signup` and logout performs only in-app session cleanup (e.g., clear react-query cache, clear/enable guest session as designed) with no Internet Identity actions."
-        },
-        {
-          "path": "frontend/src/components/layout/AppShell.tsx",
-          "operation": "modify",
-          "description": "Remove `useInternetIdentity()` usage; compute authenticated state from backend-derived role/session; ensure guest notice and profile-setup modal are shown/hidden based on this state (no dependency on `identity`)."
-        },
-        {
-          "path": "frontend/src/hooks/useCallerUserProfileSafe.ts",
-          "operation": "create",
-          "description": "Create a safe profile query hook that only attempts `getCallerUserProfile()` when backend-derived session indicates a user/admin (and not guest override), preventing unauthorized profile queries from running. Verify the component's usage instructions before implementing."
+          "description": "Remove Internet Identity-specific imports, state, and copy; implement a simple sign-in UI with (1) a primary “Continue with Google” button and (2) a phone number input + primary submit action, plus a preserved “Continue as Guest” path. Wire actions to the new session-based auth helper and navigate to the post-login destination. Use shadcn-ui components (e.g., Button, Card, Input, Label) for consistent styling; verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-4",
-      "summary": "Ensure auth-related routing/navigation stays in-app and never redirects/links to Internet Identity (id.ai).",
+      "id": "REQ-2",
+      "summary": "Add frontend-only session auth state for Google/phone sign-in, persisted for the browser session, with a clear sign-out that resets state.",
       "acceptanceCriteria": [
-        "Navigating through Account, Sign Up, and protected pages does not open external identity provider pages.",
-        "Protected pages either render content for users/guests (as intended) or show the in-app “Sign In or Continue as Guest” card without any Internet Identity references or redirects."
+        "Clicking “Continue with Google” transitions the user into an active session state and navigates them to /profile (or another clearly defined post-login destination).",
+        "Submitting the phone number sign-in form transitions the user into an active session state and navigates them to /profile (or another clearly defined post-login destination).",
+        "Refreshing the page preserves the active session state for the duration of the browser session.",
+        "A clear sign-out action clears this session-based auth state and returns the user to a signed-out experience."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/layout/BrandHeader.tsx",
-          "operation": "modify",
-          "description": "Remove `useInternetIdentity()` usage and any identity-dependent UI; use backend-derived session/role state (via `useAuthSession` and/or existing profile queries when allowed) to render welcome text and user actions; keep all navigation internal."
+          "path": "frontend/src/utils/simpleAuthSession.ts",
+          "operation": "create",
+          "description": "Create a sessionStorage-backed helper for simple auth state (e.g., set/get chosen sign-in method: google/phone; optionally store phone number for the session; signOut clears stored auth method and related session data; include a small API usable by pages/components)."
         },
         {
-          "path": "frontend/src/components/product/ProductCard.tsx",
+          "path": "frontend/src/hooks/useAuthSession.ts",
           "operation": "modify",
-          "description": "Replace identity presence checks with backend-derived session/role state for gating add-to-cart/wishlist actions; on insufficient access, show an in-app message/toast and navigate to `/account/signup` (or `/account/login`) without any external identity provider flow."
+          "description": "Extend the existing auth session hook to treat the new session-based auth state as signed-in (without requiring Internet Identity), while preserving current guest override behavior. Ensure session refresh keeps users signed in for the session when the stored method is present."
         },
         {
-          "path": "frontend/src/pages/account/AccountSignupPage.tsx",
+          "path": "frontend/src/components/auth/LoginButton.tsx",
           "operation": "modify",
-          "description": "Double-check all sign-up navigation remains internal and that no error messaging references Internet Identity or triggers guest-mode as a workaround for missing identity."
+          "description": "Update header login/logout behavior to use the new session-based sign-out (clear session auth state and guest session) when signed in, and route to /account/login when signed out. Use existing shadcn-ui Button styling; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/account/AccountLoginPage.tsx",
+          "operation": "modify",
+          "description": "On “Continue with Google” and phone form submit, set session-based auth state via the new helper, clear any guest session state, and navigate to /profile. Keep behavior frontend-only (no OAuth/OTP). Use shadcn-ui form controls for the phone input; verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Update account pages and sign-in prompts to remove Internet Identity wording and align flows/copy with Google/phone + session sign-in, including consistent sign-out behavior.",
+      "acceptanceCriteria": [
+        "/account no longer references Internet Identity in descriptions or actions.",
+        "Sign-in prompts (e.g., RequireAuth) route users to /account/login and present language consistent with the new Google/phone options.",
+        "Sign-out from the account area returns the user to a signed-out state consistent with the new session-based auth behavior."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/account/AccountPage.tsx",
+          "operation": "modify",
+          "description": "Remove Internet Identity-dependent logic and wording; derive signed-in state from the updated useAuthSession, present copy aligned to Google/phone sign-in, and implement sign-out by clearing session-based auth state (and cached queries) then navigating to a signed-out destination. Use shadcn-ui components (Card/Button) already used on the page; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/auth/RequireAuth.tsx",
+          "operation": "modify",
+          "description": "Remove useInternetIdentity usage and instead rely on useAuthSession + guestSession. Update the sign-in prompt copy to reference continuing with Google/phone on /account/login, while keeping a “Continue as Guest” option. Use existing shadcn-ui components (Card/Button/Alert) for consistent UI; verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/account/AccountLoginPage.tsx",
+          "operation": "modify",
+          "description": "Remove any remaining Internet Identity or blockchain-auth copy blocks and replace with English text describing the simple Google/phone sign-in options (UI-only). Ensure the login page experience aligns with RequireAuth and Account page prompts. Use existing shadcn-ui Card typography components; verify the component's usage instructions before implementing."
         }
       ]
     }

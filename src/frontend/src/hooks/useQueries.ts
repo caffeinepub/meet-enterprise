@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { Product, Category, Order, CartItem, UserProfile, ProductId, OrderId, CategoryId, UserRole, Credentials } from '../backend';
+import type { Product, Category, Order, CartItem, UserProfile, ProductId, OrderId, CategoryId, UserRole, Credentials, MerchantConfig, MerchantId } from '../backend';
 import { ExternalBlob } from '../backend';
 
 export function useGetCategories() {
@@ -437,5 +437,72 @@ export function useIsUsernamePasswordSet() {
       }
     },
     enabled: !!actor && !isFetching,
+  });
+}
+
+// Merchant Config Management Hooks
+
+export function useGetMerchantConfig(merchantId: MerchantId) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<MerchantConfig | null>({
+    queryKey: ['merchantConfig', merchantId],
+    queryFn: async () => {
+      if (!actor) return null;
+      try {
+        return await actor.getMerchantConfig(merchantId);
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!actor && !isFetching && !!merchantId,
+  });
+}
+
+export function useGetAllMerchantConfigs() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Array<[MerchantId, MerchantConfig]>>({
+    queryKey: ['merchantConfigs'],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getAllMerchantConfigs();
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useSaveMerchantConfig() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ merchantId, config }: { merchantId: MerchantId; config: MerchantConfig }) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.saveMerchantConfig(merchantId, config);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['merchantConfig', variables.merchantId] });
+      queryClient.invalidateQueries({ queryKey: ['merchantConfigs'] });
+    },
+  });
+}
+
+export function useDeleteMerchantConfig() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (merchantId: MerchantId) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.deleteMerchantConfig(merchantId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['merchantConfigs'] });
+    },
   });
 }

@@ -25,6 +25,7 @@ export interface Category {
     name: string;
 }
 export type Time = bigint;
+export type MerchantId = string;
 export interface Credentials {
     salt: string;
     hashedPassword: string;
@@ -39,6 +40,12 @@ export interface Order {
 }
 export type UserId = Principal;
 export type ProductPic = Uint8Array;
+export interface MerchantConfig {
+    merchantName: string;
+    qrImagePath: string;
+    upiId: string;
+    merchantCode?: string;
+}
 export type CategoryId = string;
 export type ProductId = string;
 export interface CartItem {
@@ -71,6 +78,8 @@ export interface backendInterface {
     checkout(): Promise<void>;
     clearAdminActivation(): Promise<void>;
     clearCart(): Promise<void>;
+    deleteMerchantConfig(merchantId: MerchantId): Promise<void>;
+    getAllMerchantConfigs(): Promise<Array<[MerchantId, MerchantConfig]>>;
     getBestSellingProduct(): Promise<Product | null>;
     getCallerPrincipal(): Promise<Principal>;
     getCallerUserProfile(): Promise<UserProfile | null>;
@@ -78,6 +87,7 @@ export interface backendInterface {
     getCart(): Promise<Array<CartItem>>;
     getCategories(): Promise<Array<Category>>;
     getCredentials(): Promise<Credentials | null>;
+    getMerchantConfig(merchantId: MerchantId): Promise<MerchantConfig>;
     getOrder(orderId: OrderId): Promise<Order | null>;
     getOrders(): Promise<Array<Order>>;
     getProduct(productId: ProductId): Promise<Product>;
@@ -93,6 +103,7 @@ export interface backendInterface {
     removeFromCart(productId: ProductId): Promise<void>;
     resetAdminActivationCode(newActivationCode: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    saveMerchantConfig(merchantId: MerchantId, config: MerchantConfig): Promise<void>;
     searchProducts(searchText: string): Promise<Array<Product>>;
     seedStore(): Promise<void>;
     setCredentials(password: string, salt: string): Promise<void>;

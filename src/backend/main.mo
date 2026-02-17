@@ -8,15 +8,12 @@ import Array "mo:core/Array";
 import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
-import Migration "migration"; // Add migration import
 
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-// Use migration via 'with' for state changes
-(with migration = Migration.run)
 actor {
   // Access control & authorization
   let accessControlState = AccessControl.initState();
@@ -70,6 +67,15 @@ actor {
     createdAt : Time.Time;
   };
 
+  type MerchantId = Text;
+
+  public type MerchantConfig = {
+    upiId : Text;
+    merchantName : Text;
+    merchantCode : ?Text;
+    qrImagePath : Text;
+  };
+
   // Persistent state
   var nextProductId = 1;
   var nextOrderId = 1;
@@ -79,6 +85,7 @@ actor {
   let productState = Map.empty<ProductId, Product>();
   let userProfiles = Map.empty<Principal, UserProfile>();
   let wishlistState = Map.empty<UserId, List.List<ProductId>>();
+  let merchantConfigs = Map.empty<MerchantId, MerchantConfig>();
   var adminActivationUsed = false;
   var adminActivationCode = 2537;
 
@@ -94,38 +101,79 @@ actor {
     };
   };
 
-  // Auth Management
-
-  public shared ({ caller }) func setCredentials(password : Text, salt : Text) : async () {
+  // Helper function to auto-upgrade guest to user
+  func ensureUserRole(caller : Principal) {
     switch (AccessControl.getUserRole(accessControlState, caller)) {
-      case (#admin or #user) {
-        if (password.size() < 10) {
-          Runtime.trap("Password too short");
-        };
-        credentialsMap.add(caller, { hashedPassword = password; salt });
-      };
       case (#guest) {
-        if (password.size() < 10) {
-          Runtime.trap("Password too short");
-        };
-        credentialsMap.add(caller, { hashedPassword = password; salt });
         AccessControl.assignRole(accessControlState, caller, caller, #user);
       };
+      case (#user or #admin) { /* Already has sufficient permissions */ };
     };
   };
 
-  public query ({ caller }) func getCredentials() : async ?Credentials {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can get credentials");
+  // Auth Management
+  public shared ({ caller }) func setCredentials(password : Text, salt : Text) : async () {
+    // Auto-upgrade guest to user
+    ensureUserRole(caller);
+
+    if (password.size() < 10) {
+      Runtime.trap("Password too short");
     };
+    credentialsMap.add(caller, { hashedPassword = password; salt });
+  };
+
+  public query ({ caller }) func getCredentials() : async ?Credentials {
+    // Allow all roles including guest to check credentials
     credentialsMap.get(caller);
   };
 
   public query ({ caller }) func isUsernamePasswordSet() : async Bool {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can check credentials status");
-    };
+    // Allow all roles including guest to check if credentials are set
     credentialsMap.containsKey(caller);
+  };
+
+  // Merchant Config Management
+  public shared ({ caller }) func saveMerchantConfig(merchantId : MerchantId, config : MerchantConfig) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can save merchant config");
+    };
+
+    merchantConfigs.add(merchantId, config);
+  };
+
+  public query ({ caller }) func getMerchantConfig(merchantId : MerchantId) : async MerchantConfig {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view merchant config");
+    };
+
+    switch (merchantConfigs.get(merchantId)) {
+      case (null) { Runtime.trap("Merchant config not found") };
+      case (?config) { config };
+    };
+  };
+
+  public query ({ caller }) func getAllMerchantConfigs() : async [(MerchantId, MerchantConfig)] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view merchant configs");
+    };
+
+    merchantConfigs.toArray();
+  };
+
+  public shared ({ caller }) func deleteMerchantConfig(merchantId : MerchantId) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete merchant config");
+    };
+
+    merchantConfigs.remove(merchantId);
+  };
+
+  public shared ({ caller }) func resetAdminActivationCode(newActivationCode : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can reset activation code");
+    };
+
+    adminActivationCode := newActivationCode;
   };
 
   // Secure one-time backend-admin creation.
@@ -150,14 +198,6 @@ actor {
     };
   };
 
-  public shared ({ caller }) func resetAdminActivationCode(newActivationCode : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can reset activation code");
-    };
-
-    adminActivationCode := newActivationCode;
-  };
-
   public shared ({ caller }) func clearAdminActivation() : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can clear admin activation state");
@@ -172,9 +212,7 @@ actor {
 
   // User Profile Management
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view profiles");
-    };
+    // Allow guest to view their own profile (may not exist yet)
     userProfiles.get(caller);
   };
 
@@ -186,9 +224,8 @@ actor {
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save profiles");
-    };
+    // Auto-upgrade guest to user when saving profile
+    ensureUserRole(caller);
     userProfiles.add(caller, profile);
   };
 
@@ -302,9 +339,8 @@ actor {
 
   // Cart Management
   public shared ({ caller }) func addToCart(productId : ProductId, quantity : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can add to cart");
-    };
+    // Auto-upgrade guest to user when adding to cart
+    ensureUserRole(caller);
 
     assert (quantity > 0);
 
@@ -322,10 +358,7 @@ actor {
   };
 
   public query ({ caller }) func getCart() : async [CartItem] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view cart");
-    };
-
+    // Allow guest to view their cart (may be empty)
     switch (cartState.get(caller)) {
       case (null) { [] };
       case (?cart) { cart.toArray() };
@@ -333,9 +366,8 @@ actor {
   };
 
   public shared ({ caller }) func removeFromCart(productId : ProductId) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can remove from cart");
-    };
+    // Auto-upgrade guest to user when removing from cart
+    ensureUserRole(caller);
 
     switch (cartState.get(caller)) {
       case (null) { () };
@@ -351,17 +383,15 @@ actor {
   };
 
   public shared ({ caller }) func clearCart() : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can clear cart");
-    };
+    // Auto-upgrade guest to user when clearing cart
+    ensureUserRole(caller);
 
     cartState.remove(caller);
   };
 
   public shared ({ caller }) func checkout() : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can checkout");
-    };
+    // Auto-upgrade guest to user when checking out
+    ensureUserRole(caller);
 
     let cart = switch (cartState.get(caller)) {
       case (null) { Runtime.trap("Cart is empty") };
@@ -406,10 +436,9 @@ actor {
   public query ({ caller }) func getOrders() : async [Order] {
     if (AccessControl.isAdmin(accessControlState, caller)) {
       orders.toArray();
-    } else if (AccessControl.hasPermission(accessControlState, caller, #user)) {
-      orders.toArray().filter(func(order) { order.userId == caller });
     } else {
-      Runtime.trap("Unauthorized: Only users can view orders");
+      // Allow guest/user to view their own orders
+      orders.toArray().filter(func(order) { order.userId == caller });
     };
   };
 
@@ -469,9 +498,8 @@ actor {
 
   // Review & Ratings
   public shared ({ caller }) func addRating(productId : ProductId, rating : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can add ratings");
-    };
+    // Auto-upgrade guest to user when adding rating
+    ensureUserRole(caller);
 
     assert (rating >= 1 and rating <= 5);
 
@@ -504,9 +532,8 @@ actor {
 
   // Wishlist Management
   public shared ({ caller }) func addToWishlist(productId : ProductId) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can add to wishlist");
-    };
+    // Auto-upgrade guest to user when adding to wishlist
+    ensureUserRole(caller);
 
     if (not productState.containsKey(productId)) {
       Runtime.trap("Product not found");
@@ -526,10 +553,7 @@ actor {
   };
 
   public query ({ caller }) func getWishlist() : async [ProductId] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can view wishlist");
-    };
-
+    // Allow guest to view their wishlist (may be empty)
     switch (wishlistState.get(caller)) {
       case (null) { [] };
       case (?wishlist) { wishlist.toArray() };

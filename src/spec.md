@@ -1,12 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Remove remaining Internet Identity dependencies so username/password sign-up and in-app auth gating work without requiring `useInternetIdentity()` or any redirects to id.ai.
+**Goal:** Replace the Internet Identity login experience with a simple Google + phone sign-in UI backed by frontend-only, session-based auth state.
 
 **Planned changes:**
-- Update the username/password sign-up flow to not import/call `useInternetIdentity()`, not require `identity` to submit, and not show the “Please enable guest mode or sign in to continue” error during normal sign-up.
-- Replace Internet Identity-based “authenticated” checks across account/auth UI with backend-derived session/role state so UI (Sign In/Logout) and route gating no longer depend on `useInternetIdentity()`.
-- Update backend authorization so a guest caller can successfully set credentials and be treated as a `#user` after sign-up, enabling user-only actions (e.g., profile access) without Internet Identity.
-- Ensure all auth-related routing/navigation stays in-app (e.g., `/account/signup`, guest mode) with no links or redirects to Internet Identity (id.ai).
+- Update `/account/login` to remove all Internet Identity UI/copy and stop using `useInternetIdentity()`, replacing it with (1) a “Continue with Google” button and (2) a phone number sign-in form with a clear primary action.
+- Implement frontend-only session auth state (e.g., `sessionStorage`) for Google and phone sign-in that persists across refreshes for the browser session and routes users to `/profile` after sign-in.
+- Keep (or replace with equivalent) “Continue as Guest” so users can proceed without authenticating.
+- Update `/account` and any sign-in prompts to remove Internet Identity wording and align copy/flows with the new Google/phone options, including a sign-out action that clears session auth state.
 
-**User-visible outcome:** Users can sign up with a username/password and reach their logged-in destination (e.g., `/profile`) without being blocked by Internet Identity; auth-gated pages and the account UI rely on in-app session/role state and never trigger external identity-provider redirects.
+**User-visible outcome:** Users can sign in via a Google button or phone number form (without real OAuth/SMS), continue as guest, remain signed in for the current browser session, and sign out to return to a signed-out state.

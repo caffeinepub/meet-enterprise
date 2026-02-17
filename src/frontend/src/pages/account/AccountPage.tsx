@@ -1,27 +1,39 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
-import { UserCircle } from 'lucide-react';
+import { UserCircle, Loader2 } from 'lucide-react';
 import { guestSession } from '../../utils/guestSession';
+import { simpleAuthSession } from '../../utils/simpleAuthSession';
 import { useAuthSession } from '../../hooks/useAuthSession';
 import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 export default function AccountPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isSignedIn } = useAuthSession();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignOut = async () => {
-    // Clear all cached data
-    queryClient.clear();
-    // Clear guest session
-    guestSession.clear();
-    // Navigate to home
-    navigate({ to: '/' });
+    setIsLoading(true);
+    try {
+      // Clear all cached data
+      queryClient.clear();
+      // Clear guest session
+      guestSession.clear();
+      // Clear session-based auth
+      simpleAuthSession.signOut();
+      // Navigate to home
+      navigate({ to: '/' });
+    } catch (error) {
+      console.error('Sign out error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignIn = () => {
-    navigate({ to: '/account/signup' });
+    navigate({ to: '/account/login' });
   };
 
   const handleContinueAsGuest = () => {
@@ -45,8 +57,8 @@ export default function AccountPage() {
             <CardTitle>{isSignedIn ? 'Signed In' : 'Sign In'}</CardTitle>
             <CardDescription>
               {isSignedIn
-                ? 'You are currently signed in'
-                : 'Sign in to access your profile, orders, and wishlist'}
+                ? 'You are currently signed in and can access all features'
+                : 'Sign in with Google or phone to access your profile, orders, and wishlist'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -56,8 +68,21 @@ export default function AccountPage() {
                   <UserCircle className="mr-2 h-5 w-5" />
                   View Profile
                 </Button>
-                <Button onClick={handleSignOut} variant="outline" className="w-full" size="lg">
-                  Sign Out
+                <Button 
+                  onClick={handleSignOut} 
+                  variant="outline" 
+                  className="w-full" 
+                  size="lg"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Signing Out...
+                    </>
+                  ) : (
+                    'Sign Out'
+                  )}
                 </Button>
               </>
             ) : (

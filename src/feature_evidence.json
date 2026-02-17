@@ -2,11 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-remove-internet-identity-usage-from-the-username-password-sign-up-flow-so-users-can-create-an-account-without-requiring-useinternetidentity-and-without-showing-the-error-message-please-enable-guest-mode-or-sign-in-to-continue",
-      "featureTitle": "Remove Internet Identity usage from the username/password sign-up flow so users can create an account without requiring `useInternetIdentity()` and without showing the error message “Please enable guest mode or sign in to continue”.",
+      "featureId": "feature-update-the-account-login-page-to-remove-internet-identity-specific-ui-and-code-paths-and-replace-them-with-a-simple-sign-in-experience-offering-1-a-continue-with-google-button-and-2-a-phone-number-sign-in-form",
+      "featureTitle": "Update the /account/login page to remove Internet Identity-specific UI and code paths, and replace them with a simple sign-in experience offering (1) a “Continue with Google” button and (2) a phone number sign-in form.",
       "files": [
-        "frontend/src/hooks/useAuthSession.ts",
-        "frontend/src/pages/account/AccountSignupPage.tsx"
+        "frontend/src/pages/account/AccountLoginPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -23,15 +22,13 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-replace-internet-identity-based-authenticated-checks-in-account-auth-ui-with-backend-derived-role-session-state-so-the-app-never-depends-on-useinternetidentity-for-gating-pages-or-rendering-sign-in-logout-states",
-      "featureTitle": "Replace Internet Identity-based “authenticated” checks in account/auth UI with backend-derived role/session state so the app never depends on `useInternetIdentity()` for gating pages or rendering “Sign In/Logout” states.",
+      "featureId": "feature-implement-frontend-only-behavior-for-the-new-google-and-phone-sign-in-options-so-they-allow-users-to-proceed-through-the-app-without-internet-identity-using-session-based-state-e-g-sessionstorage-to-remember-the-chosen-sign-in-method-for-the-current-session",
+      "featureTitle": "Implement frontend-only behavior for the new Google and phone sign-in options so they allow users to proceed through the app without Internet Identity, using session-based state (e.g., sessionStorage) to remember the chosen sign-in method for the current session.",
       "files": [
         "frontend/src/components/auth/LoginButton.tsx",
-        "frontend/src/components/auth/RequireAuth.tsx",
-        "frontend/src/components/layout/AppShell.tsx",
-        "frontend/src/hooks/useCallerUserProfileSafe.ts",
+        "frontend/src/hooks/useAuthSession.ts",
         "frontend/src/pages/account/AccountLoginPage.tsx",
-        "frontend/src/pages/account/AccountPage.tsx"
+        "frontend/src/utils/simpleAuthSession.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -48,12 +45,12 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-ensure-routing-navigation-related-to-authentication-uses-only-in-app-pages-e-g-account-signup-guest-mode-and-never-links-to-or-redirects-to-internet-identity-id-ai",
-      "featureTitle": "Ensure routing/navigation related to authentication uses only in-app pages (e.g., `/account/signup`, guest mode) and never links to or redirects to Internet Identity (id.ai).",
+      "featureId": "feature-update-account-related-ui-copy-and-flows-to-align-with-the-new-simple-sign-in-approach-google-phone-including-removing-internet-identity-wording-from-the-account-page-and-any-sign-in-prompts-that-route-users-to-account-login",
+      "featureTitle": "Update account-related UI copy and flows to align with the new simple sign-in approach (Google/phone), including removing Internet Identity wording from the Account page and any sign-in prompts that route users to /account/login.",
       "files": [
-        "frontend/src/components/layout/BrandHeader.tsx",
-        "frontend/src/components/product/ProductCard.tsx",
-        "frontend/src/pages/account/AccountSignupPage.tsx"
+        "frontend/src/components/auth/RequireAuth.tsx",
+        "frontend/src/pages/account/AccountLoginPage.tsx",
+        "frontend/src/pages/account/AccountPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -65,7 +62,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-4"
+        "REQ-3"
       ],
       "confidence": "high"
     }

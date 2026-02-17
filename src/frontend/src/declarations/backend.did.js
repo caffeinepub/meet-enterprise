@@ -27,6 +27,13 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const MerchantId = IDL.Text;
+export const MerchantConfig = IDL.Record({
+  'merchantName' : IDL.Text,
+  'qrImagePath' : IDL.Text,
+  'upiId' : IDL.Text,
+  'merchantCode' : IDL.Opt(IDL.Text),
+});
 export const Product = IDL.Record({
   'id' : ProductId,
   'title' : IDL.Text,
@@ -106,6 +113,12 @@ export const idlService = IDL.Service({
   'checkout' : IDL.Func([], [], []),
   'clearAdminActivation' : IDL.Func([], [], []),
   'clearCart' : IDL.Func([], [], []),
+  'deleteMerchantConfig' : IDL.Func([MerchantId], [], []),
+  'getAllMerchantConfigs' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(MerchantId, MerchantConfig))],
+      ['query'],
+    ),
   'getBestSellingProduct' : IDL.Func([], [IDL.Opt(Product)], ['query']),
   'getCallerPrincipal' : IDL.Func([], [IDL.Principal], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -113,6 +126,7 @@ export const idlService = IDL.Service({
   'getCart' : IDL.Func([], [IDL.Vec(CartItem)], ['query']),
   'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
   'getCredentials' : IDL.Func([], [IDL.Opt(Credentials)], ['query']),
+  'getMerchantConfig' : IDL.Func([MerchantId], [MerchantConfig], ['query']),
   'getOrder' : IDL.Func([OrderId], [IDL.Opt(Order)], ['query']),
   'getOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
   'getProduct' : IDL.Func([ProductId], [Product], ['query']),
@@ -140,6 +154,7 @@ export const idlService = IDL.Service({
   'removeFromCart' : IDL.Func([ProductId], [], []),
   'resetAdminActivationCode' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'saveMerchantConfig' : IDL.Func([MerchantId, MerchantConfig], [], []),
   'searchProducts' : IDL.Func([IDL.Text], [IDL.Vec(Product)], ['query']),
   'seedStore' : IDL.Func([], [], []),
   'setCredentials' : IDL.Func([IDL.Text, IDL.Text], [], []),
@@ -168,6 +183,13 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const MerchantId = IDL.Text;
+  const MerchantConfig = IDL.Record({
+    'merchantName' : IDL.Text,
+    'qrImagePath' : IDL.Text,
+    'upiId' : IDL.Text,
+    'merchantCode' : IDL.Opt(IDL.Text),
   });
   const Product = IDL.Record({
     'id' : ProductId,
@@ -248,6 +270,12 @@ export const idlFactory = ({ IDL }) => {
     'checkout' : IDL.Func([], [], []),
     'clearAdminActivation' : IDL.Func([], [], []),
     'clearCart' : IDL.Func([], [], []),
+    'deleteMerchantConfig' : IDL.Func([MerchantId], [], []),
+    'getAllMerchantConfigs' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(MerchantId, MerchantConfig))],
+        ['query'],
+      ),
     'getBestSellingProduct' : IDL.Func([], [IDL.Opt(Product)], ['query']),
     'getCallerPrincipal' : IDL.Func([], [IDL.Principal], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
@@ -255,6 +283,7 @@ export const idlFactory = ({ IDL }) => {
     'getCart' : IDL.Func([], [IDL.Vec(CartItem)], ['query']),
     'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
     'getCredentials' : IDL.Func([], [IDL.Opt(Credentials)], ['query']),
+    'getMerchantConfig' : IDL.Func([MerchantId], [MerchantConfig], ['query']),
     'getOrder' : IDL.Func([OrderId], [IDL.Opt(Order)], ['query']),
     'getOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
     'getProduct' : IDL.Func([ProductId], [Product], ['query']),
@@ -282,6 +311,7 @@ export const idlFactory = ({ IDL }) => {
     'removeFromCart' : IDL.Func([ProductId], [], []),
     'resetAdminActivationCode' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'saveMerchantConfig' : IDL.Func([MerchantId, MerchantConfig], [], []),
     'searchProducts' : IDL.Func([IDL.Text], [IDL.Vec(Product)], ['query']),
     'seedStore' : IDL.Func([], [], []),
     'setCredentials' : IDL.Func([IDL.Text, IDL.Text], [], []),

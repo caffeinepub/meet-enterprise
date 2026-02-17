@@ -1,76 +1,203 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useNavigate } from '@tanstack/react-router';
-import { ShieldCheck, UserPlus } from 'lucide-react';
-import { useEffect } from 'react';
+import { Loader2, Mail } from 'lucide-react';
+import { SiGoogle } from 'react-icons/si';
 import { guestSession } from '../../utils/guestSession';
-import { useAuthSession } from '../../hooks/useAuthSession';
+import { simpleAuthSession } from '../../utils/simpleAuthSession';
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { isInAppBrowser } from '../../utils/detectInAppBrowser';
+import InAppBrowserBlocker from '../../components/auth/InAppBrowserBlocker';
 
 export default function AccountLoginPage() {
   const navigate = useNavigate();
-  const { isSignedIn } = useAuthSession();
+  const queryClient = useQueryClient();
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (isSignedIn) {
+  // Check if in-app browser
+  const isInApp = isInAppBrowser();
+
+  // Show in-app browser blocker if detected
+  if (isInApp) {
+    return <InAppBrowserBlocker />;
+  }
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      // Simulate brief loading for UX
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Clear any guest session
+      guestSession.clear();
+      
+      // Set session-based auth
+      simpleAuthSession.setAuthMethod('google');
+      
+      // Invalidate queries to fetch fresh data
+      queryClient.invalidateQueries();
+      
+      // Navigate to profile
       navigate({ to: '/profile' });
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [isSignedIn, navigate]);
+  };
 
-  const handleSignUp = () => {
-    navigate({ to: '/account/signup' });
+  const handlePhoneSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!phoneNumber.trim()) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Simulate brief loading for UX
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Clear any guest session
+      guestSession.clear();
+      
+      // Set session-based auth with phone
+      simpleAuthSession.setAuthMethod('phone', phoneNumber);
+      
+      // Invalidate queries to fetch fresh data
+      queryClient.invalidateQueries();
+      
+      // Navigate to profile
+      navigate({ to: '/profile' });
+    } catch (error) {
+      console.error('Phone sign-in error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleContinueAsGuest = () => {
     guestSession.enable();
-    navigate({ to: '/account' });
+    navigate({ to: '/catalog' });
   };
 
   return (
     <div className="container max-w-2xl mx-auto px-4 py-8 min-h-[calc(100vh-8rem)] flex items-center justify-center">
       <div className="w-full space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-          <p className="text-muted-foreground">Sign in to your account or create a new one</p>
+          <h1 className="text-3xl font-bold mb-2">Sign In</h1>
+          <p className="text-muted-foreground">Access your Meet Enterprise account</p>
         </div>
 
         <Card>
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-gold/10 flex items-center justify-center">
-              <ShieldCheck className="h-8 w-8 text-gold" />
-            </div>
-            <CardTitle>Account Access</CardTitle>
+            <CardTitle>Welcome Back</CardTitle>
             <CardDescription>
-              Choose how you'd like to access your account
+              Choose your preferred sign-in method
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Button onClick={handleSignUp} className="w-full" size="lg">
-              <UserPlus className="mr-2 h-5 w-5" />
-              Sign Up
+          <CardContent className="space-y-4">
+            {/* Google Sign-In */}
+            <Button 
+              onClick={handleGoogleSignIn} 
+              className="w-full" 
+              size="lg"
+              disabled={isLoading}
+              variant="outline"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  <SiGoogle className="mr-2 h-5 w-5" />
+                  Continue with Google
+                </>
+              )}
             </Button>
 
-            <Button onClick={handleContinueAsGuest} variant="outline" className="w-full" size="lg">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+
+            {/* Phone Sign-In */}
+            <form onSubmit={handlePhoneSignIn} className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="Enter your phone number"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  disabled={isLoading}
+                  className="w-full"
+                />
+              </div>
+              <Button 
+                type="submit"
+                className="w-full" 
+                size="lg"
+                disabled={isLoading || !phoneNumber.trim()}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Signing In...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="mr-2 h-5 w-5" />
+                    Continue with Phone
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or</span>
+              </div>
+            </div>
+
+            {/* Guest Mode */}
+            <Button 
+              onClick={handleContinueAsGuest} 
+              variant="ghost" 
+              className="w-full" 
+              size="lg"
+              disabled={isLoading}
+            >
               Continue as Guest
             </Button>
 
-            <div className="text-center pt-2">
-              <Button variant="link" onClick={() => navigate({ to: '/account' })}>
-                Back to Account
-              </Button>
-            </div>
+            <p className="text-xs text-center text-muted-foreground pt-2">
+              Guest mode allows browsing without an account
+            </p>
           </CardContent>
         </Card>
 
         <Card className="border-muted">
           <CardHeader>
-            <CardTitle className="text-lg">Why Sign In?</CardTitle>
+            <CardTitle className="text-lg">Quick & Easy Sign-In</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground space-y-2">
+          <CardContent className="text-sm text-muted-foreground">
             <p>
-              <strong>Sign Up:</strong> Create a new account with username and password to save your cart, track orders, and manage your wishlist.
-            </p>
-            <p>
-              <strong>Guest Mode:</strong> Browse and shop without signing in, but your data won't be saved permanently.
+              Sign in with Google or your phone number to access your profile, save orders, and track your purchases.
             </p>
           </CardContent>
         </Card>

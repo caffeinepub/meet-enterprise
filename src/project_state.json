@@ -1,36 +1,34 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "App authentication should be converted to pure username/password by fully removing all Internet Identity usage; current build attempts are failing and the app still behaves as if II is active.",
+  "summary": "App update to remove Internet Identity authentication and implement a simple sign-in page with Google and phone number login options.",
   "architectural_notes": [
-    "Authentication: fully remove Internet Identity (II) flow and dependencies; use only username/password login/signup across the app."
+    "Authentication: remove Internet Identity integration; use standard Google OAuth sign-in and phone number (OTP) sign-in flows behind a simplified login UI."
   ],
-  "known_issues": [
-    "Build/deploy attempt failed with 'AI was unable to implement your request' and user still sees the same message (II likely still active in background)."
-  ],
-  "isFixRequest": true,
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-remove-internet-identity-usage-from-the-username-password-sign-up-flow-so-users-can-create-an-account-without-requiring-useinternetidentity-and-without-showing-the-error-message-please-enable-guest-mode-or-sign-in-to-continue",
-      "title": "Remove Internet Identity usage from the username/password sign-up flow so users can create an account without requiring `useInternetIdentity()` and without showing the error message “Please enable guest mode or sign in to continue”.",
+      "id": "feature-update-the-account-login-page-to-remove-internet-identity-specific-ui-and-code-paths-and-replace-them-with-a-simple-sign-in-experience-offering-1-a-continue-with-google-button-and-2-a-phone-number-sign-in-form",
+      "title": "Update the /account/login page to remove Internet Identity-specific UI and code paths, and replace them with a simple sign-in experience offering (1) a “Continue with Google” button and (2) a phone number sign-in form.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-replace-internet-identity-based-authenticated-checks-in-account-auth-ui-with-backend-derived-role-session-state-so-the-app-never-depends-on-useinternetidentity-for-gating-pages-or-rendering-sign-in-logout-states",
-      "title": "Replace Internet Identity-based “authenticated” checks in account/auth UI with backend-derived role/session state so the app never depends on `useInternetIdentity()` for gating pages or rendering “Sign In/Logout” states.",
+      "id": "feature-implement-frontend-only-behavior-for-the-new-google-and-phone-sign-in-options-so-they-allow-users-to-proceed-through-the-app-without-internet-identity-using-session-based-state-e-g-sessionstorage-to-remember-the-chosen-sign-in-method-for-the-current-session",
+      "title": "Implement frontend-only behavior for the new Google and phone sign-in options so they allow users to proceed through the app without Internet Identity, using session-based state (e.g., sessionStorage) to remember the chosen sign-in method for the current session.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-ensure-routing-navigation-related-to-authentication-uses-only-in-app-pages-e-g-account-signup-guest-mode-and-never-links-to-or-redirects-to-internet-identity-id-ai",
-      "title": "Ensure routing/navigation related to authentication uses only in-app pages (e.g., `/account/signup`, guest mode) and never links to or redirects to Internet Identity (id.ai).",
+      "id": "feature-update-account-related-ui-copy-and-flows-to-align-with-the-new-simple-sign-in-approach-google-phone-including-removing-internet-identity-wording-from-the-account-page-and-any-sign-in-prompts-that-route-users-to-account-login",
+      "title": "Update account-related UI copy and flows to align with the new simple sign-in approach (Google/phone), including removing Internet Identity wording from the Account page and any sign-in prompts that route users to /account/login.",
       "reqIds": [
-        "REQ-4"
+        "REQ-3"
       ],
       "version": 1
     }
@@ -38,20 +36,12 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Remove all Internet Identity integration and make auth purely username/password (no useInternetIdentity dependency).",
+      "summary": "Replace Internet Identity login with a simple sign-in UI supporting Google sign-in and phone number sign-in; remove all Internet Identity code from the sign-in page.",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Update backend authorization so username/password sign-up can succeed without Internet Identity by allowing a guest caller to set credentials and be upgraded to a user role during sign-up.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
+      "status": "in_progress"
     }
   ],
-  "projectName": "Remove remaining Internet Identity dependencies and unblock username/password signup",
+  "projectName": "Meet Enterprise",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

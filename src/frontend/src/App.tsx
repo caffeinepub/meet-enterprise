@@ -22,6 +22,7 @@ import AdminCustomersPage from './pages/admin/AdminCustomersPage';
 import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage';
 import AdminSupportTicketsPage from './pages/admin/AdminSupportTicketsPage';
 import AdminActivatePage from './pages/admin/AdminActivatePage';
+import AdminUpiConfigPage from './pages/admin/AdminUpiConfigPage';
 import AccountPage from './pages/account/AccountPage';
 import AccountLoginPage from './pages/account/AccountLoginPage';
 import AccountSignupPage from './pages/account/AccountSignupPage';
@@ -169,6 +170,12 @@ const adminSupportRoute = createRoute({
   component: AdminSupportTicketsPage,
 });
 
+const adminUpiConfigRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/upi',
+  component: AdminUpiConfigPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   catalogRoute,
@@ -193,6 +200,7 @@ const routeTree = rootRoute.addChildren([
   adminCustomersRoute,
   adminAnalyticsRoute,
   adminSupportRoute,
+  adminUpiConfigRoute,
 ]);
 
 const router = createRouter({ routeTree });

@@ -1,31 +1,39 @@
 import { useGetCallerUserRole } from './useQueries';
 import { guestSession } from '../utils/guestSession';
+import { simpleAuthSession } from '../utils/simpleAuthSession';
 import { UserRole } from '../backend';
+import { useInternetIdentity } from './useInternetIdentity';
 
 /**
- * Derives in-app "signed-in" state from backend role + guest session override.
- * Returns true if the caller has #user or #admin role (and guest mode is not forced).
+ * Derives in-app "signed-in" state from session-based auth or Internet Identity.
+ * Returns true if the user has signed in via Google/phone session OR Internet Identity.
+ * Backend will auto-upgrade guest roles to user on first action.
  */
 export function useAuthSession() {
-  const { data: role, isLoading, isFetched } = useGetCallerUserRole();
+  const { identity, isInitializing } = useInternetIdentity();
+  const { data: role, isLoading: roleLoading, isFetched } = useGetCallerUserRole();
   const isGuestOverride = guestSession.isActive();
 
   // If guest mode is explicitly enabled, treat as signed out
   if (isGuestOverride) {
     return {
       isSignedIn: false,
-      isLoading,
+      isLoading: isInitializing || roleLoading,
       isFetched,
       role: UserRole.guest,
     };
   }
 
-  // Otherwise, signed in if role is user or admin
-  const isSignedIn = role === UserRole.user || role === UserRole.admin;
-
+  // Check session-based auth first
+  const hasSessionAuth = simpleAuthSession.isSignedIn();
+  
+  // Also check Internet Identity authentication (non-anonymous)
+  const isAuthenticated = !!identity && !identity.getPrincipal().isAnonymous();
+  
+  // Signed in if either session auth OR Internet Identity is active
   return {
-    isSignedIn,
-    isLoading,
+    isSignedIn: hasSessionAuth || isAuthenticated,
+    isLoading: isInitializing || roleLoading,
     isFetched,
     role: role || UserRole.guest,
   };

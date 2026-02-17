@@ -15,6 +15,13 @@ export interface Category { 'id' : CategoryId, 'name' : string }
 export type CategoryId = string;
 export interface Credentials { 'salt' : string, 'hashedPassword' : string }
 export type ExternalBlob = Uint8Array;
+export interface MerchantConfig {
+  'merchantName' : string,
+  'qrImagePath' : string,
+  'upiId' : string,
+  'merchantCode' : [] | [string],
+}
+export type MerchantId = string;
 export interface Order {
   'id' : OrderId,
   'status' : string,
@@ -87,6 +94,11 @@ export interface _SERVICE {
   'checkout' : ActorMethod<[], undefined>,
   'clearAdminActivation' : ActorMethod<[], undefined>,
   'clearCart' : ActorMethod<[], undefined>,
+  'deleteMerchantConfig' : ActorMethod<[MerchantId], undefined>,
+  'getAllMerchantConfigs' : ActorMethod<
+    [],
+    Array<[MerchantId, MerchantConfig]>
+  >,
   'getBestSellingProduct' : ActorMethod<[], [] | [Product]>,
   'getCallerPrincipal' : ActorMethod<[], Principal>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
@@ -94,6 +106,7 @@ export interface _SERVICE {
   'getCart' : ActorMethod<[], Array<CartItem>>,
   'getCategories' : ActorMethod<[], Array<Category>>,
   'getCredentials' : ActorMethod<[], [] | [Credentials]>,
+  'getMerchantConfig' : ActorMethod<[MerchantId], MerchantConfig>,
   'getOrder' : ActorMethod<[OrderId], [] | [Order]>,
   'getOrders' : ActorMethod<[], Array<Order>>,
   'getProduct' : ActorMethod<[ProductId], Product>,
@@ -109,6 +122,7 @@ export interface _SERVICE {
   'removeFromCart' : ActorMethod<[ProductId], undefined>,
   'resetAdminActivationCode' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'saveMerchantConfig' : ActorMethod<[MerchantId, MerchantConfig], undefined>,
   'searchProducts' : ActorMethod<[string], Array<Product>>,
   'seedStore' : ActorMethod<[], undefined>,
   'setCredentials' : ActorMethod<[string, string], undefined>,

@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut } from 'lucide-react';
 import { guestSession } from '../../utils/guestSession';
+import { simpleAuthSession } from '../../utils/simpleAuthSession';
 import { useNavigate } from '@tanstack/react-router';
 import { useAuthSession } from '../../hooks/useAuthSession';
 
@@ -15,10 +16,11 @@ export default function LoginButton() {
       // Sign out: clear all data and navigate home
       queryClient.clear();
       guestSession.clear();
+      simpleAuthSession.signOut();
       navigate({ to: '/' });
     } else {
-      // Sign in: navigate to signup page
-      navigate({ to: '/account/signup' });
+      // Sign in: navigate to login page
+      navigate({ to: '/account/login' });
     }
   };
 

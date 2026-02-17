@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import RequireAuth from '../components/auth/RequireAuth';
 import { ArrowLeft, Check } from 'lucide-react';
+import UpiPaymentPanel from '../components/checkout/UpiPaymentPanel';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -132,35 +133,46 @@ export default function CheckoutPage() {
             )}
 
             {step === 2 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Payment Method</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                    <div className="flex items-center space-x-2 p-4 border rounded-lg">
-                      <RadioGroupItem value="upi" id="upi" />
-                      <Label htmlFor="upi" className="flex-1 cursor-pointer">UPI</Label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-4 border rounded-lg">
-                      <RadioGroupItem value="card" id="card" />
-                      <Label htmlFor="card" className="flex-1 cursor-pointer">Debit/Credit Card</Label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-4 border rounded-lg">
-                      <RadioGroupItem value="netbanking" id="netbanking" />
-                      <Label htmlFor="netbanking" className="flex-1 cursor-pointer">Net Banking</Label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-4 border rounded-lg">
-                      <RadioGroupItem value="cod" id="cod" />
-                      <Label htmlFor="cod" className="flex-1 cursor-pointer">Cash on Delivery</Label>
-                    </div>
-                  </RadioGroup>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-                    <Button onClick={() => setStep(3)}>Continue to Review</Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <>
+                {paymentMethod === 'upi' ? (
+                  <UpiPaymentPanel 
+                    amount={total}
+                    transactionNote={`Order payment - Meet Enterprise`}
+                    transactionRef={`ORDER-${Date.now()}`}
+                  />
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Payment Method</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                        <div className="flex items-center space-x-2 p-4 border rounded-lg">
+                          <RadioGroupItem value="upi" id="upi" />
+                          <Label htmlFor="upi" className="flex-1 cursor-pointer">UPI</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 p-4 border rounded-lg">
+                          <RadioGroupItem value="card" id="card" />
+                          <Label htmlFor="card" className="flex-1 cursor-pointer">Debit/Credit Card</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 p-4 border rounded-lg">
+                          <RadioGroupItem value="netbanking" id="netbanking" />
+                          <Label htmlFor="netbanking" className="flex-1 cursor-pointer">Net Banking</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 p-4 border rounded-lg">
+                          <RadioGroupItem value="cod" id="cod" />
+                          <Label htmlFor="cod" className="flex-1 cursor-pointer">Cash on Delivery</Label>
+                        </div>
+                      </RadioGroup>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                <div className="flex gap-2 mt-4">
+                  <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+                  <Button onClick={() => setStep(3)}>Continue to Review</Button>
+                </div>
+              </>
             )}
 
             {step === 3 && (

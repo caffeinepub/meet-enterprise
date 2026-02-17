@@ -1,103 +1,79 @@
 {
   "kind": "build_request",
-  "title": "Remove remaining Internet Identity dependencies and unblock username/password signup",
+  "title": "Replace Internet Identity login page with simple Google + phone sign-in UI",
+  "projectName": "Meet Enterprise",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Remove Internet Identity usage from the username/password sign-up flow so users can create an account without requiring `useInternetIdentity()` and without showing the error message “Please enable guest mode or sign in to continue”.",
+      "text": "Update the /account/login page to remove Internet Identity-specific UI and code paths, and replace them with a simple sign-in experience offering (1) a “Continue with Google” button and (2) a phone number sign-in form.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Same message is given"
+          "Yes do it"
         ]
       },
       "acceptanceCriteria": [
-        "`frontend/src/pages/account/AccountSignupPage.tsx` no longer imports or calls `useInternetIdentity()`.",
-        "Submitting the sign-up form does not block on `identity` being present.",
-        "The toast/error “Please enable guest mode or sign in to continue” is no longer shown during normal sign-up.",
-        "A user can complete sign-up and be redirected to `/profile` (or an equivalent logged-in destination) without any navigation/redirect to Internet Identity (id.ai)."
+        "Visiting /account/login does not display any mention of “Internet Identity” or “blockchain-based authentication”.",
+        "AccountLoginPage.tsx no longer imports or calls useInternetIdentity().",
+        "The page renders two primary options: a “Continue with Google” button and a phone number input with a clear primary action button (e.g., “Continue” / “Send code”).",
+        "The existing “Continue as Guest” option remains available (or is replaced by equivalent functionality) so users can proceed without authenticating."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Replace Internet Identity-based “authenticated” checks in account/auth UI with backend-derived role/session state so the app never depends on `useInternetIdentity()` for gating pages or rendering “Sign In/Logout” states.",
+      "text": "Implement frontend-only behavior for the new Google and phone sign-in options so they allow users to proceed through the app without Internet Identity, using session-based state (e.g., sessionStorage) to remember the chosen sign-in method for the current session.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Yes remove it all"
+          "Yes do it"
         ]
       },
       "acceptanceCriteria": [
-        "`frontend/src/pages/account/AccountLoginPage.tsx`, `frontend/src/pages/account/AccountPage.tsx`, `frontend/src/components/auth/RequireAuth.tsx`, `frontend/src/components/auth/LoginButton.tsx`, and `frontend/src/components/layout/AppShell.tsx` no longer import or call `useInternetIdentity()`.",
-        "Auth gating and logged-in UI state is determined without `identity` (e.g., using existing backend role queries and/or a local guest flag).",
-        "No buttons or auth gates trigger any Internet Identity login/redirect flows."
+        "Clicking “Continue with Google” transitions the user into an active session state and navigates them to /profile (or another clearly defined post-login destination).",
+        "Submitting the phone number sign-in form transitions the user into an active session state and navigates them to /profile (or another clearly defined post-login destination).",
+        "Refreshing the page preserves the active session state for the duration of the browser session.",
+        "A clear sign-out action clears this session-based auth state and returns the user to a signed-out experience."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Update backend authorization so username/password sign-up can succeed without Internet Identity by allowing a guest caller to set credentials and be upgraded to a user role during sign-up.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "Yes remove it all"
-        ]
-      },
-      "acceptanceCriteria": [
-        "`setCredentials` no longer traps for callers who are not already `#user` if they are at least a guest, and it results in the caller being treated as a `#user` after successful credential creation.",
-        "After credentials are set, calls that require `#user` permissions (e.g., profile save/read) work for that same caller without needing any Internet Identity login.",
-        "Backend changes do not introduce additional external services or additional canisters (single-actor constraint preserved)."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Ensure routing/navigation related to authentication uses only in-app pages (e.g., `/account/signup`, guest mode) and never links to or redirects to Internet Identity (id.ai).",
+      "text": "Update account-related UI copy and flows to align with the new simple sign-in approach (Google/phone), including removing Internet Identity wording from the Account page and any sign-in prompts that route users to /account/login.",
       "target": "frontend",
       "source": {
         "messageIds": [
           "msg-1"
         ],
         "quotes": [
-          "Same message is given"
+          "Yes do it"
         ]
       },
       "acceptanceCriteria": [
-        "Navigating through Account, Sign Up, and protected pages does not open external identity provider pages.",
-        "Protected pages either render content for users/guests (as intended) or show the in-app “Sign In or Continue as Guest” card without any Internet Identity references or redirects."
+        "/account no longer references Internet Identity in descriptions or actions.",
+        "Sign-in prompts (e.g., RequireAuth) route users to /account/login and present language consistent with the new Google/phone options.",
+        "Sign-out from the account area returns the user to a signed-out state consistent with the new session-based auth behavior."
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under `frontend/src/components/ui` (compose them only).",
-    "Do not edit immutable paths: `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, `frontend/src/components/ui`.",
-    "Backend must remain a single Motoko actor with all logic in `backend/main.mo`; create `backend/migration.mo` only if a state upgrade is required."
+    "Do not edit files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts (immutable paths).",
+    "Backend must remain a single Motoko actor in backend/main.mo.",
+    "User-facing text in the updated UI must be English.",
+    "Do not implement real Google OAuth or SMS/phone OTP delivery; implement UI + frontend-only session behavior only (no third-party auth integrations)."
   ],
   "nonGoals": [
-    "Implementing third-party authentication providers (only in-app username/password + guest mode).",
-    "Adding external databases or off-chain storage.",
-    "Adding real-time features (WebSockets, push notifications, etc.)."
+    "Removing Internet Identity providers and identity plumbing from the entire app bootstrap (e.g., frontend/src/main.tsx).",
+    "Implementing actual Google sign-in, OAuth flows, or SMS/OTP verification.",
+    "Adding external databases or third-party authentication services."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

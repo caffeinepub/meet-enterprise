@@ -11,6 +11,7 @@ import { extractBackendErrorMessage } from '../../utils/extractBackendErrorMessa
 import { toast } from 'sonner';
 import { guestSession } from '../../utils/guestSession';
 import { useQueryClient } from '@tanstack/react-query';
+import { MIN_PASSWORD_LENGTH, MIN_USERNAME_LENGTH } from '../../constants/auth';
 
 export default function AccountSignupPage() {
   const navigate = useNavigate();
@@ -39,14 +40,14 @@ export default function AccountSignupPage() {
 
     if (!username.trim()) {
       newErrors.username = 'Username is required';
-    } else if (username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters';
+    } else if (username.length < MIN_USERNAME_LENGTH) {
+      newErrors.username = `Username must be at least ${MIN_USERNAME_LENGTH} characters`;
     }
 
     if (!password) {
       newErrors.password = 'Password is required';
-    } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+    } else if (password.length < MIN_PASSWORD_LENGTH) {
+      newErrors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
     }
 
     if (!confirmPassword) {
@@ -264,7 +265,7 @@ export default function AccountSignupPage() {
               Your account is secured with encrypted password storage on the blockchain.
             </p>
             <p>
-              Password requirements: minimum 8 characters for security.
+              Password requirements: minimum {MIN_PASSWORD_LENGTH} characters for security.
             </p>
           </CardContent>
         </Card>
