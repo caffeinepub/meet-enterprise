@@ -1,22 +1,25 @@
 /**
  * Simple session-based authentication state management.
- * Stores auth method (google/phone) in sessionStorage for the browser session.
+ * Stores auth method (google/phone/email) in sessionStorage for the browser session.
  * Frontend-only implementation without real OAuth or OTP.
  */
 
 const AUTH_METHOD_KEY = 'simple_auth_method';
 const AUTH_PHONE_KEY = 'simple_auth_phone';
+const AUTH_EMAIL_KEY = 'simple_auth_email';
 
-export type AuthMethod = 'google' | 'phone';
+export type AuthMethod = 'google' | 'phone' | 'email';
 
 export const simpleAuthSession = {
   /**
    * Set the authentication method and mark user as signed in
    */
-  setAuthMethod(method: AuthMethod, phone?: string): void {
+  setAuthMethod(method: AuthMethod, identifier?: string): void {
     sessionStorage.setItem(AUTH_METHOD_KEY, method);
-    if (method === 'phone' && phone) {
-      sessionStorage.setItem(AUTH_PHONE_KEY, phone);
+    if (method === 'phone' && identifier) {
+      sessionStorage.setItem(AUTH_PHONE_KEY, identifier);
+    } else if (method === 'email' && identifier) {
+      sessionStorage.setItem(AUTH_EMAIL_KEY, identifier);
     }
   },
 
@@ -36,6 +39,13 @@ export const simpleAuthSession = {
   },
 
   /**
+   * Get the stored email (if signed in with email)
+   */
+  getEmail(): string | null {
+    return sessionStorage.getItem(AUTH_EMAIL_KEY);
+  },
+
+  /**
    * Check if user is signed in with session-based auth
    */
   isSignedIn(): boolean {
@@ -48,6 +58,7 @@ export const simpleAuthSession = {
   signOut(): void {
     sessionStorage.removeItem(AUTH_METHOD_KEY);
     sessionStorage.removeItem(AUTH_PHONE_KEY);
+    sessionStorage.removeItem(AUTH_EMAIL_KEY);
   },
 
   /**

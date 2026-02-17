@@ -2,9 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-account-login-page-to-remove-internet-identity-specific-ui-and-code-paths-and-replace-them-with-a-simple-sign-in-experience-offering-1-a-continue-with-google-button-and-2-a-phone-number-sign-in-form",
-      "featureTitle": "Update the /account/login page to remove Internet Identity-specific UI and code paths, and replace them with a simple sign-in experience offering (1) a “Continue with Google” button and (2) a phone number sign-in form.",
+      "featureId": "feature-update-only-the-two-selected-dom-elements-xpath-html-1-body-1-div-1-section-1-ol-1-li-1-div-2-div-1-and-html-1-body-1-div-1-section-1-ol-1-li-1-div-1-svg-1-on-the-account-login-page-so-they-implement-an-email-based-sign-in-flow-step-1-user-enters-email-step-2-app-generates-a-simulated-4-digit-code-and-displays-it-in-app-step-3-user-enters-the-code-to-verify-step-4-after-verification-collect-required-details-name-address-phone-number-to-complete-sign-in",
+      "featureTitle": "Update ONLY the two selected DOM elements (XPath: /html[1]/body[1]/div[1]/section[1]/ol[1]/li[1]/div[2]/div[1] and /html[1]/body[1]/div[1]/section[1]/ol[1]/li[1]/div[1]/svg[1]) on the /account/login page so they implement an email-based sign-in flow: Step 1) user enters email; Step 2) app generates a simulated 4-digit code and displays it in-app; Step 3) user enters the code to verify; Step 4) after verification, collect required details (name, address, phone number) to complete sign-in.",
       "files": [
+        "frontend/src/components/auth/EmailCodeSignInFlow.tsx",
         "frontend/src/pages/account/AccountLoginPage.tsx"
       ],
       "components": [
@@ -22,13 +23,10 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-implement-frontend-only-behavior-for-the-new-google-and-phone-sign-in-options-so-they-allow-users-to-proceed-through-the-app-without-internet-identity-using-session-based-state-e-g-sessionstorage-to-remember-the-chosen-sign-in-method-for-the-current-session",
-      "featureTitle": "Implement frontend-only behavior for the new Google and phone sign-in options so they allow users to proceed through the app without Internet Identity, using session-based state (e.g., sessionStorage) to remember the chosen sign-in method for the current session.",
+      "featureId": "feature-add-validation-and-error-handling-within-the-selected-elements-for-invalid-empty-email-incorrect-verification-code-and-invalid-missing-profile-fields-name-address-phone-provide-user-facing-error-messages-in-english-and-allow-retry-correction-without-leaving-the-page",
+      "featureTitle": "Add validation and error handling within the selected elements for: invalid/empty email, incorrect verification code, and invalid/missing profile fields (name/address/phone). Provide user-facing error messages in English and allow retry/correction without leaving the page.",
       "files": [
-        "frontend/src/components/auth/LoginButton.tsx",
-        "frontend/src/hooks/useAuthSession.ts",
-        "frontend/src/pages/account/AccountLoginPage.tsx",
-        "frontend/src/utils/simpleAuthSession.ts"
+        "frontend/src/components/auth/EmailCodeSignInFlow.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -45,12 +43,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-account-related-ui-copy-and-flows-to-align-with-the-new-simple-sign-in-approach-google-phone-including-removing-internet-identity-wording-from-the-account-page-and-any-sign-in-prompts-that-route-users-to-account-login",
-      "featureTitle": "Update account-related UI copy and flows to align with the new simple sign-in approach (Google/phone), including removing Internet Identity wording from the Account page and any sign-in prompts that route users to /account/login.",
+      "featureId": "feature-when-the-user-completes-verification-and-successfully-submits-required-details-name-address-phone-mark-the-user-as-signed-in-using-the-existing-session-based-mechanism-and-navigate-them-to-the-profile-page-or-the-existing-post-login-destination-clearing-any-active-guest-session-and-refreshing-relevant-cached-queries",
+      "featureTitle": "When the user completes verification and successfully submits required details (name, address, phone), mark the user as signed in using the existing session-based mechanism and navigate them to the profile page (or the existing post-login destination), clearing any active guest session and refreshing relevant cached queries.",
       "files": [
-        "frontend/src/components/auth/RequireAuth.tsx",
-        "frontend/src/pages/account/AccountLoginPage.tsx",
-        "frontend/src/pages/account/AccountPage.tsx"
+        "frontend/src/components/auth/EmailCodeSignInFlow.tsx",
+        "frontend/src/utils/simpleAuthSession.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -63,6 +60,26 @@
       ],
       "testIds": [
         "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-replace-the-selected-svg-icon-xpath-html-1-body-1-div-1-section-1-ol-1-li-1-div-1-svg-1-to-visually-match-the-new-email-code-verification-flow-e-g-mail-lock-check-icon-ensuring-it-is-consistent-with-the-updated-sign-in-ui-and-does-not-reference-google-branding",
+      "featureTitle": "Replace the selected SVG icon (XPath: /html[1]/body[1]/div[1]/section[1]/ol[1]/li[1]/div[1]/svg[1]) to visually match the new email/code verification flow (e.g., mail/lock/check icon), ensuring it is consistent with the updated sign-in UI and does not reference Google branding.",
+      "files": [
+        "frontend/src/pages/account/AccountLoginPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
       ],
       "confidence": "high"
     }

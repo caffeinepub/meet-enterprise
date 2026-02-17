@@ -1,80 +1,79 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Meet Enterprise — Replace Internet Identity login with simple Google + phone session sign-in (frontend-only)",
+  "title": "Meet Enterprise — Simulated email + 4-digit code sign-in flow on /account/login",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Replace /account/login Internet Identity UI with Google button + phone sign-in form while keeping guest access.",
+      "summary": "Replace the Google/phone login UI (within the two specified DOM elements only) with a multi-step email → simulated code → verify → details (name/address/phone) flow.",
       "acceptanceCriteria": [
-        "Visiting /account/login does not display any mention of “Internet Identity” or “blockchain-based authentication”.",
-        "AccountLoginPage.tsx no longer imports or calls useInternetIdentity().",
-        "The page renders two primary options: a “Continue with Google” button and a phone number input with a clear primary action button (e.g., “Continue” / “Send code”).",
-        "The existing “Continue as Guest” option remains available (or is replaced by equivalent functionality) so users can proceed without authenticating."
+        "On /account/login, within the selected container element, the UI is a multi-step flow with at least: email entry, code generation/display, code entry/verification, and required details entry (name/address/phone).",
+        "The simulated code is a 4-digit numeric value that is displayed on-screen (no email sending).",
+        "The flow has clear primary/secondary actions (e.g., Send code, Verify, Resend code, Back/Edit email, Complete sign-in) and the rest of the page outside the selected elements is not changed."
       ],
       "file_operations": [
         {
+          "path": "frontend/src/components/auth/EmailCodeSignInFlow.tsx",
+          "operation": "create",
+          "description": "Create a self-contained, client-only multi-step sign-in component (Step 1: email entry; Step 2: generate and display a simulated 4-digit code in-app; Step 3: code entry + verify; Step 4: collect required details name/address/phone). Compose existing shadcn/ui components (Button/Input/Label/Card content patterns) without modifying any files under frontend/src/components/ui. Verify the component's usage instructions before implementing."
+        },
+        {
           "path": "frontend/src/pages/account/AccountLoginPage.tsx",
           "operation": "modify",
-          "description": "Remove Internet Identity-specific imports, state, and copy; implement a simple sign-in UI with (1) a primary “Continue with Google” button and (2) a phone number input + primary submit action, plus a preserved “Continue as Guest” path. Wire actions to the new session-based auth helper and navigate to the post-login destination. Use shadcn-ui components (e.g., Button, Card, Input, Label) for consistent styling; verify the component's usage instructions before implementing."
+          "description": "Update ONLY the two specified DOM elements on /account/login by replacing the current Google sign-in button area with the new EmailCodeSignInFlow component (leaving all other page sections/structure unchanged), so the new flow renders entirely inside the selected container element; ensure the selected SVG element is no longer Google-branded and aligns with the email/code flow. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Add frontend-only session auth state for Google/phone sign-in, persisted for the browser session, with a clear sign-out that resets state.",
+      "summary": "Add inline validation, resend behavior, and user-facing English error handling for email, code verification, and required profile fields—without leaving the page.",
       "acceptanceCriteria": [
-        "Clicking “Continue with Google” transitions the user into an active session state and navigates them to /profile (or another clearly defined post-login destination).",
-        "Submitting the phone number sign-in form transitions the user into an active session state and navigates them to /profile (or another clearly defined post-login destination).",
-        "Refreshing the page preserves the active session state for the duration of the browser session.",
-        "A clear sign-out action clears this session-based auth state and returns the user to a signed-out experience."
+        "Submitting an empty or invalid email shows an inline error and does not proceed to code verification.",
+        "Entering a wrong 4-digit code shows an error (e.g., \"Incorrect code. Try again.\") and keeps the user on the code-entry step.",
+        "Name, address, and phone are required; missing/invalid values show field-level errors and block completion until corrected.",
+        "A user can request a new simulated code (resend) which generates a new code and invalidates the previous one."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/simpleAuthSession.ts",
-          "operation": "create",
-          "description": "Create a sessionStorage-backed helper for simple auth state (e.g., set/get chosen sign-in method: google/phone; optionally store phone number for the session; signOut clears stored auth method and related session data; include a small API usable by pages/components)."
-        },
-        {
-          "path": "frontend/src/hooks/useAuthSession.ts",
+          "path": "frontend/src/components/auth/EmailCodeSignInFlow.tsx",
           "operation": "modify",
-          "description": "Extend the existing auth session hook to treat the new session-based auth state as signed-in (without requiring Internet Identity), while preserving current guest override behavior. Ensure session refresh keeps users signed in for the session when the stored method is present."
-        },
-        {
-          "path": "frontend/src/components/auth/LoginButton.tsx",
-          "operation": "modify",
-          "description": "Update header login/logout behavior to use the new session-based sign-out (clear session auth state and guest session) when signed in, and route to /account/login when signed out. Use existing shadcn-ui Button styling; verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/account/AccountLoginPage.tsx",
-          "operation": "modify",
-          "description": "On “Continue with Google” and phone form submit, set session-based auth state via the new helper, clear any guest session state, and navigate to /profile. Keep behavior frontend-only (no OAuth/OTP). Use shadcn-ui form controls for the phone input; verify the component's usage instructions before implementing."
+          "description": "Implement validation and error states for: invalid/empty email, incorrect code, and missing/invalid name/address/phone; show inline English error messages; support resend code (generate a new 4-digit code and invalidate the prior code); allow Back/Edit email and retry without navigating away. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
       "id": "REQ-3",
-      "summary": "Update account pages and sign-in prompts to remove Internet Identity wording and align flows/copy with Google/phone + session sign-in, including consistent sign-out behavior.",
+      "summary": "On successful verification + details submission, sign the user in via the existing session mechanism, clear guest mode, refresh React Query caches, and redirect to /profile (or current post-login destination).",
       "acceptanceCriteria": [
-        "/account no longer references Internet Identity in descriptions or actions.",
-        "Sign-in prompts (e.g., RequireAuth) route users to /account/login and present language consistent with the new Google/phone options.",
-        "Sign-out from the account area returns the user to a signed-out state consistent with the new session-based auth behavior."
+        "After successful completion, guest mode (if enabled) is cleared and the app considers the user signed in for the current session.",
+        "The user is redirected to the next page (existing behavior: /profile) and the UI no longer shows the login step.",
+        "React Query caches are invalidated/refreshed similarly to the existing login behavior so authenticated-only pages load without requiring a manual refresh."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/account/AccountPage.tsx",
+          "path": "frontend/src/utils/simpleAuthSession.ts",
           "operation": "modify",
-          "description": "Remove Internet Identity-dependent logic and wording; derive signed-in state from the updated useAuthSession, present copy aligned to Google/phone sign-in, and implement sign-out by clearing session-based auth state (and cached queries) then navigating to a signed-out destination. Use shadcn-ui components (Card/Button) already used on the page; verify the component's usage instructions before implementing."
+          "description": "Extend the existing session-based auth helper to support an email-based auth method (in addition to current google/phone) and store the verified email plus collected profile details (name/address/phone) in sessionStorage for the session, while preserving existing behavior for other methods."
         },
         {
-          "path": "frontend/src/components/auth/RequireAuth.tsx",
+          "path": "frontend/src/components/auth/EmailCodeSignInFlow.tsx",
           "operation": "modify",
-          "description": "Remove useInternetIdentity usage and instead rely on useAuthSession + guestSession. Update the sign-in prompt copy to reference continuing with Google/phone on /account/login, while keeping a “Continue as Guest” option. Use existing shadcn-ui components (Card/Button/Alert) for consistent UI; verify the component's usage instructions before implementing."
-        },
+          "description": "On completion: clear any active guest session, mark the user signed in using the existing session-based mechanism (simpleAuthSession), invalidate/refresh React Query caches (using QueryClient) similarly to current login behavior, and navigate to the existing post-login destination (/profile). Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Replace the selected SVG icon on /account/login to match email/code verification and remove any Google branding; ensure correct rendering in light/dark themes.",
+      "acceptanceCriteria": [
+        "The selected SVG no longer displays a Google-branded icon.",
+        "The icon matches the email/code verification concept and renders correctly across light/dark themes."
+      ],
+      "file_operations": [
         {
           "path": "frontend/src/pages/account/AccountLoginPage.tsx",
           "operation": "modify",
-          "description": "Remove any remaining Internet Identity or blockchain-auth copy blocks and replace with English text describing the simple Google/phone sign-in options (UI-only). Ensure the login page experience aligns with RequireAuth and Account page prompts. Use existing shadcn-ui Card typography components; verify the component's usage instructions before implementing."
+          "description": "Within the selected SVG element only, replace the Google-branded icon (currently rendered via the Google icon component) with an email/code verification-themed SVG icon (e.g., mail/lock/check) consistent with the updated flow; ensure it uses current theme-driven colors so it renders correctly in light/dark. Verify the component's usage instructions before implementing."
         }
       ]
     }

@@ -1,55 +1,60 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T19:50:24.454Z",
+  "generatedAt": "2026-02-17T20:14:19.891Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 3,
+    "total": 4,
+    "implemented": 4,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Update the /account/login page to remove Internet Identity-specific UI and code paths, and replace them with a simple sign-in experience offering (1) a “Continue with Google” button and (2) a phone number sign-in form.",
+        "summary": "Update ONLY the two selected DOM elements (XPath: /html[1]/body[1]/div[1]/section[1]/ol[1]/li[1]/div[2]/div[1] and /html[1]/body[1]/div[1]/section[1]/ol[1]/li[1]/div[1]/svg[1]) on the /account/login page so they implement an email-based sign-in flow: Step 1) user enters email; Step 2) app generates a simulated 4-digit code and displays it in-app; Step 3) user enters the code to verify; Step 4) after verification, collect required details (name, address, phone number) to complete sign-in.",
         "status": "implemented",
         "plannedFiles": [
+          "frontend/src/components/auth/EmailCodeSignInFlow.tsx",
           "frontend/src/pages/account/AccountLoginPage.tsx"
         ],
         "matchedFiles": [
+          "frontend/src/components/auth/EmailCodeSignInFlow.tsx",
           "frontend/src/pages/account/AccountLoginPage.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Implement frontend-only behavior for the new Google and phone sign-in options so they allow users to proceed through the app without Internet Identity, using session-based state (e.g., sessionStorage) to remember the chosen sign-in method for the current session.",
+        "summary": "Add validation and error handling within the selected elements for: invalid/empty email, incorrect verification code, and invalid/missing profile fields (name/address/phone). Provide user-facing error messages in English and allow retry/correction without leaving the page.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/simpleAuthSession.ts",
-          "frontend/src/hooks/useAuthSession.ts",
-          "frontend/src/components/auth/LoginButton.tsx",
-          "frontend/src/pages/account/AccountLoginPage.tsx"
+          "frontend/src/components/auth/EmailCodeSignInFlow.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/utils/simpleAuthSession.ts",
-          "frontend/src/hooks/useAuthSession.ts",
-          "frontend/src/components/auth/LoginButton.tsx",
-          "frontend/src/pages/account/AccountLoginPage.tsx"
+          "frontend/src/components/auth/EmailCodeSignInFlow.tsx"
         ]
       },
       {
         "id": "REQ-3",
-        "summary": "Update account-related UI copy and flows to align with the new simple sign-in approach (Google/phone), including removing Internet Identity wording from the Account page and any sign-in prompts that route users to /account/login.",
+        "summary": "When the user completes verification and successfully submits required details (name, address, phone), mark the user as signed in using the existing session-based mechanism and navigate them to the profile page (or the existing post-login destination), clearing any active guest session and refreshing relevant cached queries.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/account/AccountPage.tsx",
-          "frontend/src/components/auth/RequireAuth.tsx",
+          "frontend/src/utils/simpleAuthSession.ts",
+          "frontend/src/components/auth/EmailCodeSignInFlow.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/simpleAuthSession.ts",
+          "frontend/src/components/auth/EmailCodeSignInFlow.tsx"
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "summary": "Replace the selected SVG icon (XPath: /html[1]/body[1]/div[1]/section[1]/ol[1]/li[1]/div[1]/svg[1]) to visually match the new email/code verification flow (e.g., mail/lock/check icon), ensuring it is consistent with the updated sign-in UI and does not reference Google branding.",
+        "status": "implemented",
+        "plannedFiles": [
           "frontend/src/pages/account/AccountLoginPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/account/AccountPage.tsx",
-          "frontend/src/components/auth/RequireAuth.tsx",
           "frontend/src/pages/account/AccountLoginPage.tsx"
         ]
       }
@@ -60,11 +65,8 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/auth/LoginButton.tsx",
-    "frontend/src/components/auth/RequireAuth.tsx",
-    "frontend/src/hooks/useAuthSession.ts",
+    "frontend/src/components/auth/EmailCodeSignInFlow.tsx",
     "frontend/src/pages/account/AccountLoginPage.tsx",
-    "frontend/src/pages/account/AccountPage.tsx",
     "frontend/src/utils/simpleAuthSession.ts",
     "project_state.json",
     "scratch/component-selection.json",

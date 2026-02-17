@@ -15,7 +15,7 @@
   "frontend/src/components/admin/AdminGuard.tsx": "Admin-only access guard component that checks caller's admin status via useIsCallerAdmin hook and displays access denied alert for non-admin users with loading state during verification.",
   "frontend/src/App.tsx": "Main app component with TanStack Router configuration including new /admin/upi route for UPI configuration page.",
   "frontend/src/pages/account/AccountPage.tsx": "Account hub page that uses session-based auth state for sign-in/sign-out actions, clearing session auth and cached data on logout without Internet Identity dependencies.",
-  "frontend/src/pages/account/AccountLoginPage.tsx": "Login page with Google sign-in button and phone number input form using session-based auth, plus guest mode option, without any Internet Identity references.",
+  "frontend/src/pages/account/AccountLoginPage.tsx": "Login page featuring the new email-based sign-in flow with simulated code verification, guest mode option, and in-app browser detection.",
   "frontend/src/components/auth/RequireAuth.tsx": "Authentication guard using session-based auth state instead of Internet Identity, showing sign-in prompt with Google/phone language and guest mode option.",
   "frontend/src/hooks/useCallerPrincipal.ts": "React Query hook that fetches the authenticated caller's principal ID from the backend for display and troubleshooting purposes.",
   "frontend/src/components/layout/MobileBottomNav.tsx": "Mobile bottom navigation bar with Catalog, Cart, and Account tabs featuring enhanced active state styling with bright gold color, bold font weight, scale transform, and glowing drop shadow effect for vibrant visual feedback, plus semi-transparent backdrop blur background.",
@@ -46,5 +46,6 @@
   "frontend/src/components/checkout/UpiPaymentPanel.tsx": "UPI payment panel component that fetches stored merchant configuration, uses it for deep link and QR display with safe fallback to default constants, and shows non-blocking notice when defaults are used.",
   "frontend/src/pages/CheckoutPage.tsx": "Checkout page with three-step flow (Address, Payment, Review) that renders UpiPaymentPanel when UPI payment method is selected, otherwise shows payment method selection radio group, and continues to review step for order placement.",
   "frontend/src/pages/admin/AdminUpiConfigPage.tsx": "Admin page for configuring UPI merchant settings (UPI ID, merchant name, optional merchant code, QR image path) with form validation, backend integration, and error handling for unauthorized access.",
-  "frontend/src/utils/simpleAuthSession.ts": "Session-based authentication utility using sessionStorage to manage Google/phone sign-in state (frontend-only) with methods to set/get auth method, check sign-in status, and clear session data."
+  "frontend/src/utils/simpleAuthSession.ts": "Session-based authentication utility extended to support email authentication method in addition to Google and phone, storing auth state in sessionStorage.",
+  "frontend/src/components/auth/EmailCodeSignInFlow.tsx": "Multi-step email-based sign-in component with email entry, simulated 4-digit code verification display and entry, resend functionality, and required user details collection (name/address/phone) with inline validation and error handling."
 }

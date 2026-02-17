@@ -1,79 +1,111 @@
 {
   "kind": "build_request",
-  "title": "Replace Internet Identity login page with simple Google + phone sign-in UI",
+  "title": "Replace Google/Phone login with simulated email-code sign-in flow (with details collection)",
   "projectName": "Meet Enterprise",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update the /account/login page to remove Internet Identity-specific UI and code paths, and replace them with a simple sign-in experience offering (1) a “Continue with Google” button and (2) a phone number sign-in form.",
+      "text": "Update ONLY the two selected DOM elements (XPath: /html[1]/body[1]/div[1]/section[1]/ol[1]/li[1]/div[2]/div[1] and /html[1]/body[1]/div[1]/section[1]/ol[1]/li[1]/div[1]/svg[1]) on the /account/login page so they implement an email-based sign-in flow: Step 1) user enters email; Step 2) app generates a simulated 4-digit code and displays it in-app; Step 3) user enters the code to verify; Step 4) after verification, collect required details (name, address, phone number) to complete sign-in.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "recent-msg-1"
         ],
         "quotes": [
-          "Yes do it"
+          "Build sing in flow",
+          "Simple customer has to enter their email when they enter ask for the code which is sent to their e mail by you after checking it let them to sign in",
+          "Ask for necessary details like name address phone number"
         ]
       },
       "acceptanceCriteria": [
-        "Visiting /account/login does not display any mention of “Internet Identity” or “blockchain-based authentication”.",
-        "AccountLoginPage.tsx no longer imports or calls useInternetIdentity().",
-        "The page renders two primary options: a “Continue with Google” button and a phone number input with a clear primary action button (e.g., “Continue” / “Send code”).",
-        "The existing “Continue as Guest” option remains available (or is replaced by equivalent functionality) so users can proceed without authenticating."
+        "On /account/login, within the selected container element, the UI is a multi-step flow with at least: email entry, code generation/display, code entry/verification, and required details entry (name/address/phone).",
+        "The simulated code is a 4-digit numeric value that is displayed on-screen (no email sending).",
+        "The flow has clear primary/secondary actions (e.g., Send code, Verify, Resend code, Back/Edit email, Complete sign-in) and the rest of the page outside the selected elements is not changed."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Implement frontend-only behavior for the new Google and phone sign-in options so they allow users to proceed through the app without Internet Identity, using session-based state (e.g., sessionStorage) to remember the chosen sign-in method for the current session.",
+      "text": "Add validation and error handling within the selected elements for: invalid/empty email, incorrect verification code, and invalid/missing profile fields (name/address/phone). Provide user-facing error messages in English and allow retry/correction without leaving the page.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "recent-msg-1"
         ],
         "quotes": [
-          "Yes do it"
+          "If they give us wrong information then what can be done",
+          "Okk include that"
         ]
       },
       "acceptanceCriteria": [
-        "Clicking “Continue with Google” transitions the user into an active session state and navigates them to /profile (or another clearly defined post-login destination).",
-        "Submitting the phone number sign-in form transitions the user into an active session state and navigates them to /profile (or another clearly defined post-login destination).",
-        "Refreshing the page preserves the active session state for the duration of the browser session.",
-        "A clear sign-out action clears this session-based auth state and returns the user to a signed-out experience."
+        "Submitting an empty or invalid email shows an inline error and does not proceed to code verification.",
+        "Entering a wrong 4-digit code shows an error (e.g., \"Incorrect code. Try again.\") and keeps the user on the code-entry step.",
+        "Name, address, and phone are required; missing/invalid values show field-level errors and block completion until corrected.",
+        "A user can request a new simulated code (resend) which generates a new code and invalidates the previous one."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Update account-related UI copy and flows to align with the new simple sign-in approach (Google/phone), including removing Internet Identity wording from the Account page and any sign-in prompts that route users to /account/login.",
+      "text": "When the user completes verification and successfully submits required details (name, address, phone), mark the user as signed in using the existing session-based mechanism and navigate them to the profile page (or the existing post-login destination), clearing any active guest session and refreshing relevant cached queries.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "recent-msg-1"
         ],
         "quotes": [
-          "Yes do it"
+          "after checking it let them to sign in",
+          "After sign in flow"
         ]
       },
       "acceptanceCriteria": [
-        "/account no longer references Internet Identity in descriptions or actions.",
-        "Sign-in prompts (e.g., RequireAuth) route users to /account/login and present language consistent with the new Google/phone options.",
-        "Sign-out from the account area returns the user to a signed-out state consistent with the new session-based auth behavior."
+        "After successful completion, guest mode (if enabled) is cleared and the app considers the user signed in for the current session.",
+        "The user is redirected to the next page (existing behavior: /profile) and the UI no longer shows the login step.",
+        "React Query caches are invalidated/refreshed similarly to the existing login behavior so authenticated-only pages load without requiring a manual refresh."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Replace the selected SVG icon (XPath: /html[1]/body[1]/div[1]/section[1]/ol[1]/li[1]/div[1]/svg[1]) to visually match the new email/code verification flow (e.g., mail/lock/check icon), ensuring it is consistent with the updated sign-in UI and does not reference Google branding.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-msg-1"
+        ],
+        "quotes": [
+          "Ask for real google OAuth",
+          "Real Google OAuth is not supported on this platform. Do you want me to implement a simulated Google sign-in flow... instead?"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The selected SVG no longer displays a Google-branded icon.",
+        "The icon matches the email/code verification concept and renders correctly across light/dark themes."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts (immutable paths).",
-    "Backend must remain a single Motoko actor in backend/main.mo.",
-    "User-facing text in the updated UI must be English.",
-    "Do not implement real Google OAuth or SMS/phone OTP delivery; implement UI + frontend-only session behavior only (no third-party auth integrations)."
+    "Apply UI changes ONLY to the two selected elements identified by the provided XPaths; do not modify other page sections/components.",
+    "Do not implement real Google OAuth.",
+    "Do not implement real email sending; the 4-digit code must be simulated and shown in-app.",
+    "All user-facing text must be in English.",
+    "Do not edit files under frontend/src/components/ui (read-only components must be composed, not modified)."
   ],
   "nonGoals": [
-    "Removing Internet Identity providers and identity plumbing from the entire app bootstrap (e.g., frontend/src/main.tsx).",
-    "Implementing actual Google sign-in, OAuth flows, or SMS/OTP verification.",
-    "Adding external databases or third-party authentication services."
+    "Adding or placing a temporary product for payment testing (user will manage placement).",
+    "Implementing SMS/email delivery integrations.",
+    "Implementing third-party authentication providers beyond the existing in-app/session approach."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }
